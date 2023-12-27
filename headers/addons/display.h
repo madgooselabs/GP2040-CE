@@ -8,6 +8,7 @@
 
 #include <string>
 #include <hardware/i2c.h>
+#include "GPGFX.h"
 #include "OneBitDisplay.h"
 #include "BoardConfig.h"
 #include "gpaddon.h"
@@ -155,17 +156,17 @@
 #endif
 
 // i2c Display Module
-#define I2CDisplayName "I2CDisplay"
+#define DisplayName "Display"
 
 // i2C OLED Display
-class I2CDisplayAddon : public GPAddon
+class DisplayAddon : public GPAddon
 {
 public:
 	virtual bool available();
 	virtual void setup();
 	virtual void preprocess() {}
 	virtual void process();
-	virtual std::string name() { return I2CDisplayName; }
+	virtual std::string name() { return DisplayName; }
 	virtual void attachInputHistoryAddon(InputHistoryAddon*);
 private:
 	int initDisplay(int typeOverride);
@@ -233,6 +234,8 @@ private:
 		BUTTONS,
 		SPLASH
 	};
+
+	GPGFX* gpDisplay;
 
 	DisplayMode getDisplayMode();
 	DisplayMode prevDisplayMode;

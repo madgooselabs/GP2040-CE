@@ -8,7 +8,7 @@
 
 #include "addons/board_led.h"
 #include "addons/buzzerspeaker.h"
-#include "addons/i2cdisplay.h" // Add-Ons
+#include "addons/display.h" // Add-Ons
 #include "addons/pleds.h"
 #include "addons/ps4mode.h"
 #include "addons/pspassthrough.h"
@@ -26,16 +26,16 @@ GP2040Aux::~GP2040Aux() {
 
 void GP2040Aux::setup() {
 	InputHistoryAddon* inputHistoryAddon = new InputHistoryAddon();
-	I2CDisplayAddon* i2CDisplayAddon = new I2CDisplayAddon();
+	DisplayAddon* displayAddon = new DisplayAddon();
 
-	if(inputHistoryAddon->available() && i2CDisplayAddon->available())
-		i2CDisplayAddon->attachInputHistoryAddon(inputHistoryAddon);
+	if(inputHistoryAddon->available() && displayAddon->available())
+		displayAddon->attachInputHistoryAddon(inputHistoryAddon);
 
 	// Setup Add-ons
 	addons.LoadUSBAddon(new PSPassthroughAddon(), CORE1_LOOP);
 	addons.LoadUSBAddon(new XBOnePassthroughAddon(), CORE1_LOOP);
 	addons.LoadAddon(inputHistoryAddon, CORE1_LOOP);
-	addons.LoadAddon(i2CDisplayAddon, CORE1_LOOP);
+	addons.LoadAddon(displayAddon, CORE1_LOOP);
 	addons.LoadAddon(new NeoPicoLEDAddon(), CORE1_LOOP);
 	addons.LoadAddon(new PlayerLEDAddon(), CORE1_LOOP);
 	addons.LoadAddon(new BoardLedAddon(), CORE1_LOOP);

@@ -3,7 +3,7 @@
  * SPDX-FileCopyrightText: Copyright (c) 2021 Jason Skuby (mytechtoybox.com)
  */
 
-#include "addons/i2cdisplay.h"
+#include "addons/display.h"
 #include "GamepadState.h"
 #include "enums.h"
 #include "storagemanager.h"
@@ -14,14 +14,28 @@
 #include "config.pb.h"
 #include "usb_driver.h"
 
-bool I2CDisplayAddon::available() {
+bool DisplayAddon::available() {
 	const DisplayOptions& options = Storage::getInstance().getDisplayOptions();
 	return options.enabled && PeripheralManager::getInstance().isI2CEnabled(options.i2cBlock);
 }
 
-void I2CDisplayAddon::setup() {
+void DisplayAddon::setup() {
 	const DisplayOptions& options = Storage::getInstance().getDisplayOptions();
 	PeripheralI2C* i2c = PeripheralManager::getInstance().getI2C(options.i2cBlock);
+
+	gpDisplay = new GPGFX();
+
+	GPGFX::DisplayTypeOptions gpOptions;
+
+	if (PeripheralManager::getInstance().isI2CEnabled(options.i2cBlock)) {
+		gpOptions.i2c = i2c;
+	    gpOptions.size = options.size;
+		gpOptions.address = options.i2cAddress;
+		gpOptions.orientation = options.flip;
+		gpOptions.inverted = options.invert;
+	}
+
+	gpDisplay->init(GPGFX::DisplayType::SSD1306, &gpOptions);
 
 	obdI2CInit(&obd,
 	    options.size,
@@ -58,7 +72,7 @@ void I2CDisplayAddon::setup() {
 	isInputHistoryEnabled = inputHistoryOptions.enabled;
 }
 
-bool I2CDisplayAddon::isDisplayPowerOff()
+bool DisplayAddon::isDisplayPowerOff()
 {
 	if (turnOffWhenSuspended && get_usb_suspended()) {
 		if (displayIsPowerOn) setDisplayPower(0);
@@ -96,7 +110,7 @@ bool I2CDisplayAddon::isDisplayPowerOff()
 	return (isFocusModeEnabled && focusModePrevState) || (!!displaySaverTimeout && displaySaverTimer <= 0);
 }
 
-void I2CDisplayAddon::setDisplayPower(uint8_t status)
+void DisplayAddon::setDisplayPower(uint8_t status)
 {
 	if (displayIsPowerOn != status) {
 		displayIsPowerOn = status;
@@ -104,13 +118,13 @@ void I2CDisplayAddon::setDisplayPower(uint8_t status)
 	}
 }
 
-void I2CDisplayAddon::process() {
+void DisplayAddon::process() {
 	if (!configMode && isDisplayPowerOff()) return;
 
 	clearScreen(0);
 
 	switch (getDisplayMode()) {
-		case I2CDisplayAddon::DisplayMode::CONFIG_INSTRUCTION:
+		case DisplayAddon::DisplayMode::CONFIG_INSTRUCTION:
 			drawStatusBar(gamepad);
 			drawText(0, 2, "[Web Config Mode]");
 			drawText(0, 3, std::string("GP2040-CE : ") + std::string(GP2040VERSION));
@@ -119,14 +133,14 @@ void I2CDisplayAddon::process() {
 			drawText(5, 6, "B1 > Button");
 			drawText(5, 7, "B2 > Splash");
 			break;
-		case I2CDisplayAddon::DisplayMode::SPLASH:
+		case DisplayAddon::DisplayMode::SPLASH:
 			if (getDisplayOptions().splashMode == static_cast<SplashMode>(SPLASH_MODE_NONE)) {
 				drawText(0, 4, " Splash NOT enabled.");
 				break;
 			}
 			drawSplashScreen(getDisplayOptions().splashMode, (uint8_t*) Storage::getInstance().getDisplayOptions().splashImage.bytes, 90);
 			break;
-		case I2CDisplayAddon::DisplayMode::BUTTONS:
+		case DisplayAddon::DisplayMode::BUTTONS:
 			drawStatusBar(gamepad);
 			const DisplayOptions& options = getDisplayOptions();
 			ButtonLayoutCustomOptions buttonLayoutCustomOptions = options.buttonLayoutCustomOptions;
@@ -246,7 +260,7 @@ void I2CDisplayAddon::process() {
 	obdDumpBuffer(&obd, NULL);
 }
 
-I2CDisplayAddon::DisplayMode I2CDisplayAddon::getDisplayMode() {
+DisplayAddon::DisplayMode DisplayAddon::getDisplayMode() {
 	if (configMode) {
 		gamepad->read();
 		uint16_t buttonState = gamepad->state.buttons;
@@ -254,16 +268,16 @@ I2CDisplayAddon::DisplayMode I2CDisplayAddon::getDisplayMode() {
 			switch (prevButtonState) {
 				case (GAMEPAD_MASK_B1):
 					prevDisplayMode =
-						prevDisplayMode == I2CDisplayAddon::DisplayMode::BUTTONS ?
-							I2CDisplayAddon::DisplayMode::CONFIG_INSTRUCTION : I2CDisplayAddon::DisplayMode::BUTTONS;
+						prevDisplayMode == DisplayAddon::DisplayMode::BUTTONS ?
+							DisplayAddon::DisplayMode::CONFIG_INSTRUCTION : DisplayAddon::DisplayMode::BUTTONS;
 						break;
 				case (GAMEPAD_MASK_B2):
 					prevDisplayMode =
-						prevDisplayMode == I2CDisplayAddon::DisplayMode::SPLASH ?
-							I2CDisplayAddon::DisplayMode::CONFIG_INSTRUCTION : I2CDisplayAddon::DisplayMode::SPLASH;
+						prevDisplayMode == DisplayAddon::DisplayMode::SPLASH ?
+							DisplayAddon::DisplayMode::CONFIG_INSTRUCTION : DisplayAddon::DisplayMode::SPLASH;
 					break;
 				default:
-					prevDisplayMode = I2CDisplayAddon::DisplayMode::CONFIG_INSTRUCTION;
+					prevDisplayMode = DisplayAddon::DisplayMode::CONFIG_INSTRUCTION;
 			}
 		}
 		prevButtonState = buttonState;
@@ -272,20 +286,20 @@ I2CDisplayAddon::DisplayMode I2CDisplayAddon::getDisplayMode() {
 		if (Storage::getInstance().getDisplayOptions().splashMode != static_cast<SplashMode>(SPLASH_MODE_NONE)) {
 			uint32_t splashDuration = getDisplayOptions().splashDuration;
 			if (splashDuration == 0 || getMillis() < splashDuration) {
-				return I2CDisplayAddon::DisplayMode::SPLASH;
+				return DisplayAddon::DisplayMode::SPLASH;
 			}
 		}
 	}
 
-	return I2CDisplayAddon::DisplayMode::BUTTONS;
+	return DisplayAddon::DisplayMode::BUTTONS;
 }
 
-const DisplayOptions& I2CDisplayAddon::getDisplayOptions() {
+const DisplayOptions& DisplayAddon::getDisplayOptions() {
 	bool configMode = Storage::getInstance().GetConfigMode();
 	return configMode ? Storage::getInstance().getPreviewDisplayOptions() : Storage::getInstance().getDisplayOptions();
 }
 
-int I2CDisplayAddon::initDisplay(int typeOverride) {
+int DisplayAddon::initDisplay(int typeOverride) {
 	const DisplayOptions& options = Storage::getInstance().getDisplayOptions();
 	PeripheralI2C* i2c = PeripheralManager::getInstance().getI2C(options.i2cBlock);
 	return obdI2CInit(&obd,
@@ -298,7 +312,7 @@ int I2CDisplayAddon::initDisplay(int typeOverride) {
 		-1);
 }
 
-bool I2CDisplayAddon::isSH1106(int detectedDisplay) {
+bool DisplayAddon::isSH1106(int detectedDisplay) {
 	// Only attempt detection if we think we are using a SSD1306 or if auto-detection failed.
 	if (detectedDisplay != OLED_SSD1306_3C &&
 		detectedDisplay != OLED_SSD1306_3D &&
@@ -350,11 +364,11 @@ bool I2CDisplayAddon::isSH1106(int detectedDisplay) {
 	return i == sizeof(RANDOM_DATA);
 }
 
-void I2CDisplayAddon::clearScreen(int render) {
+void DisplayAddon::clearScreen(int render) {
 	obdFill(&obd, 0, render);
 }
 
-void I2CDisplayAddon::drawButtonLayoutLeft(ButtonLayoutParamsLeft& options)
+void DisplayAddon::drawButtonLayoutLeft(ButtonLayoutParamsLeft& options)
 {
 	int32_t& startX    = options.common.startX;
 	int32_t& startY    = options.common.startY;
@@ -405,7 +419,7 @@ void I2CDisplayAddon::drawButtonLayoutLeft(ButtonLayoutParamsLeft& options)
 		}
 }
 
-void I2CDisplayAddon::drawButtonLayoutRight(ButtonLayoutParamsRight& options)
+void DisplayAddon::drawButtonLayoutRight(ButtonLayoutParamsRight& options)
 {
 	int32_t& startX        = options.common.startX;
 	int32_t& startY        = options.common.startY;
@@ -471,7 +485,7 @@ void I2CDisplayAddon::drawButtonLayoutRight(ButtonLayoutParamsRight& options)
 		}
 }
 
-void I2CDisplayAddon::drawDiamond(int cx, int cy, int size, uint8_t colour, uint8_t filled)
+void DisplayAddon::drawDiamond(int cx, int cy, int size, uint8_t colour, uint8_t filled)
 {
 	if (filled) {
 		int i;
@@ -487,7 +501,7 @@ void I2CDisplayAddon::drawDiamond(int cx, int cy, int size, uint8_t colour, uint
 	obdDrawLine(&obd, cx, cy + size, cx - size, cy, colour, 0);
 }
 
-void I2CDisplayAddon::drawStickless(int startX, int startY, int buttonRadius, int buttonPadding)
+void DisplayAddon::drawStickless(int startX, int startY, int buttonRadius, int buttonPadding)
 {
 
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
@@ -498,7 +512,7 @@ void I2CDisplayAddon::drawStickless(int startX, int startY, int buttonRadius, in
 	obdPreciseEllipse(&obd, startX + (buttonMargin * (isInputHistoryEnabled ? 1.875 : 2.25)), startY + buttonMargin * (isInputHistoryEnabled ? 1.5 : 1.875), buttonRadius, buttonRadius, 1, pressedUp());
 }
 
-void I2CDisplayAddon::drawWasdBox(int startX, int startY, int buttonRadius, int buttonPadding)
+void DisplayAddon::drawWasdBox(int startX, int startY, int buttonRadius, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
@@ -509,7 +523,7 @@ void I2CDisplayAddon::drawWasdBox(int startX, int startY, int buttonRadius, int 
 	obdPreciseEllipse(&obd, startX + (buttonMargin * 2), startY + buttonMargin * 1.25, buttonRadius, buttonRadius, 1, pressedRight());
 }
 
-void I2CDisplayAddon::drawUDLR(int startX, int startY, int buttonRadius, int buttonPadding)
+void DisplayAddon::drawUDLR(int startX, int startY, int buttonRadius, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
@@ -520,7 +534,7 @@ void I2CDisplayAddon::drawUDLR(int startX, int startY, int buttonRadius, int but
 	obdPreciseEllipse(&obd, startX + (buttonMargin * 1.625), startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, pressedRight());
 }
 
-void I2CDisplayAddon::drawArcadeStick(int startX, int startY, int buttonRadius, int buttonPadding)
+void DisplayAddon::drawArcadeStick(int startX, int startY, int buttonRadius, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
@@ -552,7 +566,7 @@ void I2CDisplayAddon::drawArcadeStick(int startX, int startY, int buttonRadius, 
 	}
 }
 
-void I2CDisplayAddon::drawVLXA(int startX, int startY, int buttonRadius, int buttonPadding)
+void DisplayAddon::drawVLXA(int startX, int startY, int buttonRadius, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
@@ -584,7 +598,7 @@ void I2CDisplayAddon::drawVLXA(int startX, int startY, int buttonRadius, int but
 	}
 }
 
-void I2CDisplayAddon::drawFightboardMirrored(int startX, int startY, int buttonRadius, int buttonPadding)
+void DisplayAddon::drawFightboardMirrored(int startX, int startY, int buttonRadius, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
     const int leftMargin = startX + buttonPadding + buttonRadius;
@@ -607,7 +621,7 @@ void I2CDisplayAddon::drawFightboardMirrored(int startX, int startY, int buttonR
     obdPreciseEllipse(&obd, startX + buttonMargin * 2.75, startY + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedR3());
 }
 
-void I2CDisplayAddon::drawTwinStickA(int startX, int startY, int buttonRadius, int buttonPadding)
+void DisplayAddon::drawTwinStickA(int startX, int startY, int buttonRadius, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
@@ -639,7 +653,7 @@ void I2CDisplayAddon::drawTwinStickA(int startX, int startY, int buttonRadius, i
 	}
 }
 
-void I2CDisplayAddon::drawTwinStickB(int startX, int startY, int buttonRadius, int buttonPadding)
+void DisplayAddon::drawTwinStickB(int startX, int startY, int buttonRadius, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
@@ -671,7 +685,7 @@ void I2CDisplayAddon::drawTwinStickB(int startX, int startY, int buttonRadius, i
 	}
 }
 
-void I2CDisplayAddon::drawMAMEA(int startX, int startY, int buttonSize, int buttonPadding)
+void DisplayAddon::drawMAMEA(int startX, int startY, int buttonSize, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + buttonSize;
 
@@ -683,7 +697,7 @@ void I2CDisplayAddon::drawMAMEA(int startX, int startY, int buttonSize, int butt
 
 }
 
-void I2CDisplayAddon::drawOpenCore0WASDA(int startX, int startY, int buttonSize, int buttonPadding)
+void DisplayAddon::drawOpenCore0WASDA(int startX, int startY, int buttonSize, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + buttonSize;
 
@@ -703,7 +717,7 @@ void I2CDisplayAddon::drawOpenCore0WASDA(int startX, int startY, int buttonSize,
 
 }
 
-void I2CDisplayAddon::drawMAMEB(int startX, int startY, int buttonSize, int buttonPadding)
+void DisplayAddon::drawMAMEB(int startX, int startY, int buttonSize, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + buttonSize;
 
@@ -718,7 +732,7 @@ void I2CDisplayAddon::drawMAMEB(int startX, int startY, int buttonSize, int butt
 
 }
 
-void I2CDisplayAddon::drawMAME8B(int startX, int startY, int buttonSize, int buttonPadding)
+void DisplayAddon::drawMAME8B(int startX, int startY, int buttonSize, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + buttonSize;
 
@@ -735,7 +749,7 @@ void I2CDisplayAddon::drawMAME8B(int startX, int startY, int buttonSize, int but
 
 }
 
-void I2CDisplayAddon::drawOpenCore0WASDB(int startX, int startY, int buttonSize, int buttonPadding)
+void DisplayAddon::drawOpenCore0WASDB(int startX, int startY, int buttonSize, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + buttonSize;
 
@@ -752,7 +766,7 @@ void I2CDisplayAddon::drawOpenCore0WASDB(int startX, int startY, int buttonSize,
 
 }
 
-void I2CDisplayAddon::drawKeyboardAngled(int startX, int startY, int buttonRadius, int buttonPadding)
+void DisplayAddon::drawKeyboardAngled(int startX, int startY, int buttonRadius, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
@@ -763,7 +777,7 @@ void I2CDisplayAddon::drawKeyboardAngled(int startX, int startY, int buttonRadiu
 	drawDiamond(startX + buttonMargin, startY + buttonMargin, buttonRadius, 1, pressedRight());
 }
 
-void I2CDisplayAddon::drawVewlix(int startX, int startY, int buttonRadius, int buttonPadding)
+void DisplayAddon::drawVewlix(int startX, int startY, int buttonRadius, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
@@ -779,7 +793,7 @@ void I2CDisplayAddon::drawVewlix(int startX, int startY, int buttonRadius, int b
 	obdPreciseEllipse(&obd, startX + (buttonMargin * 5.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
 }
 
-void I2CDisplayAddon::drawVLXB(int startX, int startY, int buttonRadius, int buttonPadding)
+void DisplayAddon::drawVLXB(int startX, int startY, int buttonRadius, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
@@ -797,7 +811,7 @@ void I2CDisplayAddon::drawVLXB(int startX, int startY, int buttonRadius, int but
 	obdPreciseEllipse(&obd, startX + (buttonMargin * 7.4) - (buttonMargin / 3.5), startY + buttonMargin - (buttonMargin / 1.5), buttonRadius *.8, buttonRadius * .8, 1, pGamepad->pressedS2());
 }
 
-void I2CDisplayAddon::drawFightboard(int startX, int startY, int buttonRadius, int buttonPadding)
+void DisplayAddon::drawFightboard(int startX, int startY, int buttonRadius, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
@@ -819,7 +833,7 @@ void I2CDisplayAddon::drawFightboard(int startX, int startY, int buttonRadius, i
 	obdPreciseEllipse(&obd, startX + buttonMargin * 6.75, startY + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedR3());
 }
 
-void I2CDisplayAddon::drawVewlix7(int startX, int startY, int buttonRadius, int buttonPadding)
+void DisplayAddon::drawVewlix7(int startX, int startY, int buttonRadius, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
@@ -835,7 +849,7 @@ void I2CDisplayAddon::drawVewlix7(int startX, int startY, int buttonRadius, int 
 	//obdPreciseEllipse(&obd, startX + (buttonMargin * 5.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, gamepad->pressedL2());
 }
 
-void I2CDisplayAddon::drawSega2p(int startX, int startY, int buttonRadius, int buttonPadding)
+void DisplayAddon::drawSega2p(int startX, int startY, int buttonRadius, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
@@ -851,7 +865,7 @@ void I2CDisplayAddon::drawSega2p(int startX, int startY, int buttonRadius, int b
 	obdPreciseEllipse(&obd, startX + (buttonMargin * 5.75), startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
 }
 
-void I2CDisplayAddon::drawNoir8(int startX, int startY, int buttonRadius, int buttonPadding)
+void DisplayAddon::drawNoir8(int startX, int startY, int buttonRadius, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
@@ -867,7 +881,7 @@ void I2CDisplayAddon::drawNoir8(int startX, int startY, int buttonRadius, int bu
 	obdPreciseEllipse(&obd, startX + (buttonMargin * 5.75), startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
 }
 
-void I2CDisplayAddon::drawCapcom(int startX, int startY, int buttonRadius, int buttonPadding)
+void DisplayAddon::drawCapcom(int startX, int startY, int buttonRadius, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
@@ -883,7 +897,7 @@ void I2CDisplayAddon::drawCapcom(int startX, int startY, int buttonRadius, int b
 	obdPreciseEllipse(&obd, startX + buttonMargin * 6.25, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
 }
 
-void I2CDisplayAddon::drawCapcom6(int startX, int startY, int buttonRadius, int buttonPadding)
+void DisplayAddon::drawCapcom6(int startX, int startY, int buttonRadius, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
@@ -897,7 +911,7 @@ void I2CDisplayAddon::drawCapcom6(int startX, int startY, int buttonRadius, int 
 	obdPreciseEllipse(&obd, startX + buttonMargin * 5.25, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
 }
 
-void I2CDisplayAddon::drawSticklessButtons(int startX, int startY, int buttonRadius, int buttonPadding)
+void DisplayAddon::drawSticklessButtons(int startX, int startY, int buttonRadius, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
@@ -913,7 +927,7 @@ void I2CDisplayAddon::drawSticklessButtons(int startX, int startY, int buttonRad
 	obdPreciseEllipse(&obd, startX + (buttonMargin * 5.75), startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
 }
 
-void I2CDisplayAddon::drawWasdButtons(int startX, int startY, int buttonRadius, int buttonPadding)
+void DisplayAddon::drawWasdButtons(int startX, int startY, int buttonRadius, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
@@ -929,7 +943,7 @@ void I2CDisplayAddon::drawWasdButtons(int startX, int startY, int buttonRadius, 
 	obdPreciseEllipse(&obd, startX + buttonMargin * 6.25, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
 }
 
-void I2CDisplayAddon::drawArcadeButtons(int startX, int startY, int buttonRadius, int buttonPadding)
+void DisplayAddon::drawArcadeButtons(int startX, int startY, int buttonRadius, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
@@ -948,7 +962,7 @@ void I2CDisplayAddon::drawArcadeButtons(int startX, int startY, int buttonRadius
 // I pulled this out of my PR, brought it back because of recent talks re: SOCD and rhythm games
 // Enjoy!
 
-void I2CDisplayAddon::drawDancepadA(int startX, int startY, int buttonSize, int buttonPadding)
+void DisplayAddon::drawDancepadA(int startX, int startY, int buttonSize, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + buttonSize;
 
@@ -958,7 +972,7 @@ void I2CDisplayAddon::drawDancepadA(int startX, int startY, int buttonSize, int 
 	obdRectangle(&obd, startX + buttonMargin * 2, startY + buttonMargin, startX + buttonSize + buttonMargin * 2, startY + buttonSize + buttonMargin, 1, pressedRight());
 }
 
-void I2CDisplayAddon::drawDancepadB(int startX, int startY, int buttonSize, int buttonPadding)
+void DisplayAddon::drawDancepadB(int startX, int startY, int buttonSize, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + buttonSize;
 
@@ -968,15 +982,15 @@ void I2CDisplayAddon::drawDancepadB(int startX, int startY, int buttonSize, int 
 	obdRectangle(&obd, startX + buttonMargin * 2, startY + buttonMargin * 2, startX + buttonSize + buttonMargin * 2, startY + buttonSize + buttonMargin * 2, 1, pGamepad->pressedB3()); // Down/Right
 }
 
-void I2CDisplayAddon::drawBlankA(int startX, int startY, int buttonSize, int buttonPadding)
+void DisplayAddon::drawBlankA(int startX, int startY, int buttonSize, int buttonPadding)
 {
 }
 
-void I2CDisplayAddon::drawBlankB(int startX, int startY, int buttonSize, int buttonPadding)
+void DisplayAddon::drawBlankB(int startX, int startY, int buttonSize, int buttonPadding)
 {
 }
 
-void I2CDisplayAddon::drawSplashScreen(int splashMode, uint8_t * splashChoice, int splashSpeed)
+void DisplayAddon::drawSplashScreen(int splashMode, uint8_t * splashChoice, int splashSpeed)
 {
     int mils = getMillis();
     switch (splashMode)
@@ -1001,11 +1015,11 @@ void I2CDisplayAddon::drawSplashScreen(int splashMode, uint8_t * splashChoice, i
 	}
 }
 
-void I2CDisplayAddon::drawText(int x, int y, std::string text) {
+void DisplayAddon::drawText(int x, int y, std::string text) {
 	obdWriteString(&obd, 0, x, y, (char*)text.c_str(), FONT_6x8, 0, 0);
 }
 
-void I2CDisplayAddon::drawStatusBar(Gamepad * gamepad)
+void DisplayAddon::drawStatusBar(Gamepad * gamepad)
 {
 	const TurboOptions& turboOptions = Storage::getInstance().getAddonOptions().turboOptions;
 
@@ -1071,7 +1085,7 @@ void I2CDisplayAddon::drawStatusBar(Gamepad * gamepad)
 	drawText(0, 0, statusBar);
 }
 
-bool I2CDisplayAddon::pressedUp()
+bool DisplayAddon::pressedUp()
 {
 	switch (gamepad->getOptions().dpadMode)
 	{
@@ -1083,7 +1097,7 @@ bool I2CDisplayAddon::pressedUp()
 	return false;
 }
 
-bool I2CDisplayAddon::pressedDown()
+bool DisplayAddon::pressedDown()
 {
 	switch (gamepad->getOptions().dpadMode)
 	{
@@ -1095,7 +1109,7 @@ bool I2CDisplayAddon::pressedDown()
 	return false;
 }
 
-bool I2CDisplayAddon::pressedLeft()
+bool DisplayAddon::pressedLeft()
 {
 	switch (gamepad->getOptions().dpadMode)
 	{
@@ -1107,7 +1121,7 @@ bool I2CDisplayAddon::pressedLeft()
 	return false;
 }
 
-bool I2CDisplayAddon::pressedRight()
+bool DisplayAddon::pressedRight()
 {
 	switch (gamepad->getOptions().dpadMode)
 	{
@@ -1119,6 +1133,6 @@ bool I2CDisplayAddon::pressedRight()
 	return false;
 }
 
-void I2CDisplayAddon::attachInputHistoryAddon(InputHistoryAddon* pInputHistoryAddon) {
+void DisplayAddon::attachInputHistoryAddon(InputHistoryAddon* pInputHistoryAddon) {
 	inputHistoryAddon = pInputHistoryAddon;
 }

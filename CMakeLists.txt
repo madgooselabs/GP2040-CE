@@ -164,7 +164,7 @@ src/addons/dualdirectional.cpp
 src/addons/keyboard_host.cpp
 src/addons/i2canalog1219.cpp
 src/addons/jslider.cpp
-src/addons/i2cdisplay.cpp
+src/addons/display.cpp
 src/addons/neopicoleds.cpp
 src/addons/playernum.cpp
 src/addons/playerleds.cpp
@@ -201,6 +201,7 @@ FlashPROM
 ADS1219
 PlayerLEDs
 NeoPico
+GPGFX
 OneBitDisplay
 ArduinoJson
 rndis
