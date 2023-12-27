@@ -9,7 +9,6 @@
 #include <string>
 #include <hardware/i2c.h>
 #include "GPGFX.h"
-#include "OneBitDisplay.h"
 #include "BoardConfig.h"
 #include "gpaddon.h"
 #include "gamepad.h"
@@ -169,9 +168,6 @@ public:
 	virtual std::string name() { return DisplayName; }
 	virtual void attachInputHistoryAddon(InputHistoryAddon*);
 private:
-	int initDisplay(int typeOverride);
-	bool isSH1106(int detectedDisplay);
-	void clearScreen(int render); // DisplayModule
 	void drawStickless(int startX, int startY, int buttonRadius, int buttonPadding);
 	void drawWasdBox(int startX, int startY, int buttonRadius, int buttonPadding);
 	void drawArcadeStick(int startX, int startY, int buttonRadius, int buttonPadding);
@@ -222,8 +218,6 @@ private:
 	int32_t displaySaverTimer;
 	uint8_t displayIsPowerOn = 1;
 	uint32_t prevMillis;
-	uint8_t ucBackBuffer[1024];
-	OBDISP obd;
 	std::string statusBar;
 	Gamepad* gamepad;
 	Gamepad* pGamepad;

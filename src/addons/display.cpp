@@ -25,9 +25,10 @@ void DisplayAddon::setup() {
 
 	gpDisplay = new GPGFX();
 
-	GPGFX::DisplayTypeOptions gpOptions;
+	GPGFX_DisplayTypeOptions gpOptions;
 
 	if (PeripheralManager::getInstance().isI2CEnabled(options.i2cBlock)) {
+		gpOptions.displayType = GPGFX_DisplayType::SSD1306;
 		gpOptions.i2c = i2c;
 	    gpOptions.size = options.size;
 		gpOptions.address = options.i2cAddress;
@@ -35,27 +36,8 @@ void DisplayAddon::setup() {
 		gpOptions.inverted = options.invert;
 	}
 
-	gpDisplay->init(GPGFX::DisplayType::SSD1306, &gpOptions);
+	gpDisplay->init(&gpOptions);
 
-	obdI2CInit(&obd,
-	    options.size,
-		options.i2cAddress,
-		options.flip,
-		options.invert,
-		DISPLAY_USEWIRE,
-		i2c,
-		-1);
-
-	const int detectedDisplay = initDisplay(0);
-	if (isSH1106(detectedDisplay)) {
-		// The display is actually a SH1106 that was misdetected as a SSD1306 by OneBitDisplay.
-		// Reinitialize as SH1106.
-		initDisplay(OLED_132x64);
-	}
-
-	obdSetContrast(&obd, 0xFF);
-	obdSetBackBuffer(&obd, ucBackBuffer);
-	clearScreen(1);
 	gamepad = Storage::getInstance().GetGamepad();
 	pGamepad = Storage::getInstance().GetProcessedGamepad();
 
@@ -114,14 +96,14 @@ void DisplayAddon::setDisplayPower(uint8_t status)
 {
 	if (displayIsPowerOn != status) {
 		displayIsPowerOn = status;
-		obdPower(&obd, status);
+		gpDisplay->getDriver()->setPower(status);
 	}
 }
 
 void DisplayAddon::process() {
 	if (!configMode && isDisplayPowerOff()) return;
 
-	clearScreen(0);
+	gpDisplay->clearScreen();
 
 	switch (getDisplayMode()) {
 		case DisplayAddon::DisplayMode::CONFIG_INSTRUCTION:
@@ -251,13 +233,13 @@ void DisplayAddon::process() {
 			}
 
 			if(isInputHistoryEnabled && inputHistoryAddon != nullptr) {
-				inputHistoryAddon->drawHistory(&obd);
+				//inputHistoryAddon->drawHistory(&obd);
 			}
 
 			break;
 	}
 
-	obdDumpBuffer(&obd, NULL);
+	gpDisplay->getDriver()->drawBuffer(NULL);
 }
 
 DisplayAddon::DisplayMode DisplayAddon::getDisplayMode() {
@@ -297,75 +279,6 @@ DisplayAddon::DisplayMode DisplayAddon::getDisplayMode() {
 const DisplayOptions& DisplayAddon::getDisplayOptions() {
 	bool configMode = Storage::getInstance().GetConfigMode();
 	return configMode ? Storage::getInstance().getPreviewDisplayOptions() : Storage::getInstance().getDisplayOptions();
-}
-
-int DisplayAddon::initDisplay(int typeOverride) {
-	const DisplayOptions& options = Storage::getInstance().getDisplayOptions();
-	PeripheralI2C* i2c = PeripheralManager::getInstance().getI2C(options.i2cBlock);
-	return obdI2CInit(&obd,
-	    typeOverride > 0 ? typeOverride : options.size,
-		options.i2cAddress,
-		options.flip,
-		options.invert,
-		DISPLAY_USEWIRE,
-		i2c,
-		-1);
-}
-
-bool DisplayAddon::isSH1106(int detectedDisplay) {
-	// Only attempt detection if we think we are using a SSD1306 or if auto-detection failed.
-	if (detectedDisplay != OLED_SSD1306_3C &&
-		detectedDisplay != OLED_SSD1306_3D &&
-		detectedDisplay != OLED_NOT_FOUND) {
-		return false;
-	}
-
-	// To detect an SH1106 we make use of the fact that SH1106 supports read-modify-write operations over I2C, whereas
-	// SSD1306 does not.
-	// We perform a number of read-modify-write operations and check whether the data we read back matches the data we
-	// previously wrote. If it does we can be reasonably confident that we are using a SH1106.
-
-	// We turn the display off for the remainder of this function, we do not want users to observe the random data we
-	// are writing.
-	obdPower(&obd, false);
-
-	const uint8_t RANDOM_DATA[] = { 0xbf, 0x88, 0x13, 0x41, 0x00 };
-	uint8_t buffer[4];
-	uint8_t i = 0;
-	for (; i < sizeof(RANDOM_DATA); ++i) {
-		buffer[0] = 0x80; // one command
-		buffer[1] = 0xE0; // read-modify-write
-		buffer[2] = 0xC0; // one data
-		if (obd.i2c->write(obd.oled_addr, buffer, 3) == 0) {
-			break;
-		}
-
-		// Read two bytes back, the first byte is a dummy read and the second byte is the byte was actually want.
-		if (obd.i2c->read(obd.oled_addr, buffer, 2) == 0) {
-			break;
-		}
-
-		// Check whether the byte we read is the byte we previously wrote.
-		if (i > 0 && buffer[1] != RANDOM_DATA[i - 1]) {
-			break;
-		}
-
-		// Write the current byte, we will attempt to read it in the next loop iteration.
-		buffer[0] = 0xc0; // one data
-		buffer[1] = RANDOM_DATA[i]; // data byte
-		buffer[2] = 0x80; // one command
-		buffer[3] = 0xEE; // end read-modify-write
-		if (obd.i2c->write(obd.oled_addr, buffer, 4) == 0) {
-			break;
-		}
-	}
-
-	obdPower(&obd, true);
-	return i == sizeof(RANDOM_DATA);
-}
-
-void DisplayAddon::clearScreen(int render) {
-	obdFill(&obd, 0, render);
 }
 
 void DisplayAddon::drawButtonLayoutLeft(ButtonLayoutParamsLeft& options)
@@ -490,15 +403,15 @@ void DisplayAddon::drawDiamond(int cx, int cy, int size, uint8_t colour, uint8_t
 	if (filled) {
 		int i;
 		for (i = 0; i < size; i++) {
-			obdDrawLine(&obd, cx - i, cy - size + i, cx + i, cy - size + i, colour, 0);
-			obdDrawLine(&obd, cx - i, cy + size - i, cx + i, cy + size - i, colour, 0);
+			gpDisplay->drawLine(cx - i, cy - size + i, cx + i, cy - size + i, colour, 0);
+			gpDisplay->drawLine(cx - i, cy + size - i, cx + i, cy + size - i, colour, 0);
 		}
-		obdDrawLine(&obd, cx - size, cy, cx + size, cy, colour, 0); // Fill in the middle
+		gpDisplay->drawLine(cx - size, cy, cx + size, cy, colour, 0); // Fill in the middle
 	}
-	obdDrawLine(&obd, cx - size, cy, cx, cy - size, colour, 0);
-	obdDrawLine(&obd, cx, cy - size, cx + size, cy, colour, 0);
-	obdDrawLine(&obd, cx + size, cy, cx, cy + size, colour, 0);
-	obdDrawLine(&obd, cx, cy + size, cx - size, cy, colour, 0);
+	gpDisplay->drawLine(cx - size, cy, cx, cy - size, colour, 0);
+	gpDisplay->drawLine(cx, cy - size, cx + size, cy, colour, 0);
+	gpDisplay->drawLine(cx + size, cy, cx, cy + size, colour, 0);
+	gpDisplay->drawLine(cx, cy + size, cx - size, cy, colour, 0);
 }
 
 void DisplayAddon::drawStickless(int startX, int startY, int buttonRadius, int buttonPadding)
@@ -506,10 +419,10 @@ void DisplayAddon::drawStickless(int startX, int startY, int buttonRadius, int b
 
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
-	obdPreciseEllipse(&obd, startX, startY, buttonRadius, buttonRadius, 1, pressedLeft());
-	obdPreciseEllipse(&obd, startX + buttonMargin, startY, buttonRadius, buttonRadius, 1, pressedDown());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 1.875), startY + (buttonMargin / 2), buttonRadius, buttonRadius, 1, pressedRight());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * (isInputHistoryEnabled ? 1.875 : 2.25)), startY + buttonMargin * (isInputHistoryEnabled ? 1.5 : 1.875), buttonRadius, buttonRadius, 1, pressedUp());
+	gpDisplay->drawEllipse(startX, startY, buttonRadius, buttonRadius, 1, pressedLeft());
+	gpDisplay->drawEllipse(startX + buttonMargin, startY, buttonRadius, buttonRadius, 1, pressedDown());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 1.875), startY + (buttonMargin / 2), buttonRadius, buttonRadius, 1, pressedRight());
+	gpDisplay->drawEllipse(startX + (buttonMargin * (isInputHistoryEnabled ? 1.875 : 2.25)), startY + buttonMargin * (isInputHistoryEnabled ? 1.5 : 1.875), buttonRadius, buttonRadius, 1, pressedUp());
 }
 
 void DisplayAddon::drawWasdBox(int startX, int startY, int buttonRadius, int buttonPadding)
@@ -517,10 +430,10 @@ void DisplayAddon::drawWasdBox(int startX, int startY, int buttonRadius, int but
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
 	// WASD
-	obdPreciseEllipse(&obd, startX, startY + buttonMargin * 0.5, buttonRadius, buttonRadius, 1, pressedLeft());
-	obdPreciseEllipse(&obd, startX + buttonMargin, startY + buttonMargin * 0.875, buttonRadius, buttonRadius, 1, pressedDown());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 1.5, startY - buttonMargin * 0.125, buttonRadius, buttonRadius, 1, pressedUp());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 2), startY + buttonMargin * 1.25, buttonRadius, buttonRadius, 1, pressedRight());
+	gpDisplay->drawEllipse(startX, startY + buttonMargin * 0.5, buttonRadius, buttonRadius, 1, pressedLeft());
+	gpDisplay->drawEllipse(startX + buttonMargin, startY + buttonMargin * 0.875, buttonRadius, buttonRadius, 1, pressedDown());
+	gpDisplay->drawEllipse(startX + buttonMargin * 1.5, startY - buttonMargin * 0.125, buttonRadius, buttonRadius, 1, pressedUp());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 2), startY + buttonMargin * 1.25, buttonRadius, buttonRadius, 1, pressedRight());
 }
 
 void DisplayAddon::drawUDLR(int startX, int startY, int buttonRadius, int buttonPadding)
@@ -528,10 +441,10 @@ void DisplayAddon::drawUDLR(int startX, int startY, int buttonRadius, int button
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
 	// UDLR
-	obdPreciseEllipse(&obd, startX, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, pressedLeft());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 0.875), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pressedUp());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 0.875), startY + buttonMargin * 1.25, buttonRadius, buttonRadius, 1, pressedDown());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 1.625), startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, pressedRight());
+	gpDisplay->drawEllipse(startX, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, pressedLeft());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 0.875), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pressedUp());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 0.875), startY + buttonMargin * 1.25, buttonRadius, buttonRadius, 1, pressedDown());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 1.625), startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, pressedRight());
 }
 
 void DisplayAddon::drawArcadeStick(int startX, int startY, int buttonRadius, int buttonPadding)
@@ -539,30 +452,30 @@ void DisplayAddon::drawArcadeStick(int startX, int startY, int buttonRadius, int
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
 	// Stick
-	obdPreciseEllipse(&obd, startX + (buttonMargin / 2), startY + (buttonMargin / 2), buttonRadius * 1.25, buttonRadius * 1.25, 1, 0);
+	gpDisplay->drawEllipse(startX + (buttonMargin / 2), startY + (buttonMargin / 2), buttonRadius * 1.25, buttonRadius * 1.25, 1, 0);
 
 	if (pressedUp()) {
 		if (pressedLeft()) {
-			obdPreciseEllipse(&obd, startX + (buttonMargin / 5), startY + (buttonMargin / 5), buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + (buttonMargin / 5), startY + (buttonMargin / 5), buttonRadius, buttonRadius, 1, 1);
 		} else if (pressedRight()) {
-			obdPreciseEllipse(&obd, startX + (buttonMargin * 0.875), startY + (buttonMargin / 5), buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + (buttonMargin * 0.875), startY + (buttonMargin / 5), buttonRadius, buttonRadius, 1, 1);
 		} else {
-			obdPreciseEllipse(&obd, startX + (buttonMargin / 2), startY, buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + (buttonMargin / 2), startY, buttonRadius, buttonRadius, 1, 1);
 		}
 	} else if (pressedDown()) {
 		if (pressedLeft()) {
-			obdPreciseEllipse(&obd, startX + (buttonMargin / 5), startY + (buttonMargin * 0.875), buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + (buttonMargin / 5), startY + (buttonMargin * 0.875), buttonRadius, buttonRadius, 1, 1);
 		} else if (pressedRight()) {
-			obdPreciseEllipse(&obd, startX + (buttonMargin * 0.875), startY + (buttonMargin * 0.875), buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + (buttonMargin * 0.875), startY + (buttonMargin * 0.875), buttonRadius, buttonRadius, 1, 1);
 		} else {
-			obdPreciseEllipse(&obd, startX + buttonMargin / 2, startY + buttonMargin, buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + buttonMargin / 2, startY + buttonMargin, buttonRadius, buttonRadius, 1, 1);
 		}
 	} else if (pressedLeft()) {
-		obdPreciseEllipse(&obd, startX, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
+		gpDisplay->drawEllipse(startX, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
 	} else if (pressedRight()) {
-		obdPreciseEllipse(&obd, startX + buttonMargin, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
+		gpDisplay->drawEllipse(startX + buttonMargin, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
 	} else {
-		obdPreciseEllipse(&obd, startX + buttonMargin / 2, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
+		gpDisplay->drawEllipse(startX + buttonMargin / 2, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
 	}
 }
 
@@ -571,30 +484,30 @@ void DisplayAddon::drawVLXA(int startX, int startY, int buttonRadius, int button
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
 	// Stick
-	obdPreciseEllipse(&obd, startX + (buttonMargin / 2), startY + (buttonMargin / 2), buttonRadius * 1.25, buttonRadius * 1.25, 1, 0);
+	gpDisplay->drawEllipse(startX + (buttonMargin / 2), startY + (buttonMargin / 2), buttonRadius * 1.25, buttonRadius * 1.25, 1, 0);
 
 	if (pressedUp()) {
 		if (pressedLeft()) {
-			obdPreciseEllipse(&obd, startX + (buttonMargin / 5), startY + (buttonMargin / 5), buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + (buttonMargin / 5), startY + (buttonMargin / 5), buttonRadius, buttonRadius, 1, 1);
 		} else if (pressedRight()) {
-			obdPreciseEllipse(&obd, startX + (buttonMargin * 0.875), startY + (buttonMargin / 5), buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + (buttonMargin * 0.875), startY + (buttonMargin / 5), buttonRadius, buttonRadius, 1, 1);
 		} else {
-			obdPreciseEllipse(&obd, startX + (buttonMargin / 2), startY, buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + (buttonMargin / 2), startY, buttonRadius, buttonRadius, 1, 1);
 		}
 	} else if (pressedDown()) {
 		if (pressedLeft()) {
-			obdPreciseEllipse(&obd, startX + (buttonMargin / 5), startY + (buttonMargin * 0.875), buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + (buttonMargin / 5), startY + (buttonMargin * 0.875), buttonRadius, buttonRadius, 1, 1);
 		} else if (pressedRight()) {
-			obdPreciseEllipse(&obd, startX + (buttonMargin * 0.875), startY + (buttonMargin * 0.875), buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + (buttonMargin * 0.875), startY + (buttonMargin * 0.875), buttonRadius, buttonRadius, 1, 1);
 		} else {
-			obdPreciseEllipse(&obd, startX + buttonMargin / 2, startY + buttonMargin, buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + buttonMargin / 2, startY + buttonMargin, buttonRadius, buttonRadius, 1, 1);
 		}
 	} else if (pressedLeft()) {
-		obdPreciseEllipse(&obd, startX, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
+		gpDisplay->drawEllipse(startX, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
 	} else if (pressedRight()) {
-		obdPreciseEllipse(&obd, startX + buttonMargin, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
+		gpDisplay->drawEllipse(startX + buttonMargin, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
 	} else {
-		obdPreciseEllipse(&obd, startX + buttonMargin / 2, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
+		gpDisplay->drawEllipse(startX + buttonMargin / 2, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
 	}
 }
 
@@ -603,22 +516,22 @@ void DisplayAddon::drawFightboardMirrored(int startX, int startY, int buttonRadi
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
     const int leftMargin = startX + buttonPadding + buttonRadius;
 
-	obdPreciseEllipse(&obd, leftMargin, startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedL1());
-	obdPreciseEllipse(&obd, leftMargin + buttonMargin, startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
-	obdPreciseEllipse(&obd, leftMargin + (buttonMargin*2), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
-	obdPreciseEllipse(&obd, leftMargin + (buttonMargin*3), startY * 1.25, buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
+	gpDisplay->drawEllipse(leftMargin, startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedL1());
+	gpDisplay->drawEllipse(leftMargin + buttonMargin, startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
+	gpDisplay->drawEllipse(leftMargin + (buttonMargin*2), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
+	gpDisplay->drawEllipse(leftMargin + (buttonMargin*3), startY * 1.25, buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
 
-	obdPreciseEllipse(&obd, leftMargin, startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
-	obdPreciseEllipse(&obd, leftMargin + buttonMargin, startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
-	obdPreciseEllipse(&obd, leftMargin + (buttonMargin*2), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
-	obdPreciseEllipse(&obd, leftMargin + (buttonMargin*3), startY + buttonMargin * 1.25, buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
+	gpDisplay->drawEllipse(leftMargin, startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
+	gpDisplay->drawEllipse(leftMargin + buttonMargin, startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
+	gpDisplay->drawEllipse(leftMargin + (buttonMargin*2), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
+	gpDisplay->drawEllipse(leftMargin + (buttonMargin*3), startY + buttonMargin * 1.25, buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
 
     // Extra buttons
-    obdPreciseEllipse(&obd, startX + buttonMargin * 0.5, startY + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedL3());
-    obdPreciseEllipse(&obd, startX + buttonMargin * 1.0625, startY + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedS1());
-    obdPreciseEllipse(&obd, startX + buttonMargin * 1.625, startY + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedA1());
-    obdPreciseEllipse(&obd, startX + buttonMargin * 2.125+0.0625, startY + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedS2());
-    obdPreciseEllipse(&obd, startX + buttonMargin * 2.75, startY + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedR3());
+    gpDisplay->drawEllipse(startX + buttonMargin * 0.5, startY + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedL3());
+    gpDisplay->drawEllipse(startX + buttonMargin * 1.0625, startY + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedS1());
+    gpDisplay->drawEllipse(startX + buttonMargin * 1.625, startY + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedA1());
+    gpDisplay->drawEllipse(startX + buttonMargin * 2.125+0.0625, startY + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedS2());
+    gpDisplay->drawEllipse(startX + buttonMargin * 2.75, startY + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedR3());
 }
 
 void DisplayAddon::drawTwinStickA(int startX, int startY, int buttonRadius, int buttonPadding)
@@ -626,30 +539,30 @@ void DisplayAddon::drawTwinStickA(int startX, int startY, int buttonRadius, int 
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
 	// Stick
-	obdPreciseEllipse(&obd, startX + (buttonMargin / 2), startY + (buttonMargin / 2), buttonRadius * 1.25, buttonRadius * 1.25, 1, 0);
+	gpDisplay->drawEllipse(startX + (buttonMargin / 2), startY + (buttonMargin / 2), buttonRadius * 1.25, buttonRadius * 1.25, 1, 0);
 
 	if (pressedUp()) {
 		if (pressedLeft()) {
-			obdPreciseEllipse(&obd, startX + (buttonMargin / 5), startY + (buttonMargin / 5), buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + (buttonMargin / 5), startY + (buttonMargin / 5), buttonRadius, buttonRadius, 1, 1);
 		} else if (pressedRight()) {
-			obdPreciseEllipse(&obd, startX + (buttonMargin * 0.875), startY + (buttonMargin / 5), buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + (buttonMargin * 0.875), startY + (buttonMargin / 5), buttonRadius, buttonRadius, 1, 1);
 		} else {
-			obdPreciseEllipse(&obd, startX + (buttonMargin / 2), startY, buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + (buttonMargin / 2), startY, buttonRadius, buttonRadius, 1, 1);
 		}
 	} else if (pressedDown()) {
 		if (pressedLeft()) {
-			obdPreciseEllipse(&obd, startX + (buttonMargin / 5), startY + (buttonMargin * 0.875), buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + (buttonMargin / 5), startY + (buttonMargin * 0.875), buttonRadius, buttonRadius, 1, 1);
 		} else if (pressedRight()) {
-			obdPreciseEllipse(&obd, startX + (buttonMargin * 0.875), startY + (buttonMargin * 0.875), buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + (buttonMargin * 0.875), startY + (buttonMargin * 0.875), buttonRadius, buttonRadius, 1, 1);
 		} else {
-			obdPreciseEllipse(&obd, startX + buttonMargin / 2, startY + buttonMargin, buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + buttonMargin / 2, startY + buttonMargin, buttonRadius, buttonRadius, 1, 1);
 		}
 	} else if (pressedLeft()) {
-		obdPreciseEllipse(&obd, startX, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
+		gpDisplay->drawEllipse(startX, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
 	} else if (pressedRight()) {
-		obdPreciseEllipse(&obd, startX + buttonMargin, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
+		gpDisplay->drawEllipse(startX + buttonMargin, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
 	} else {
-		obdPreciseEllipse(&obd, startX + buttonMargin / 2, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
+		gpDisplay->drawEllipse(startX + buttonMargin / 2, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
 	}
 }
 
@@ -658,30 +571,30 @@ void DisplayAddon::drawTwinStickB(int startX, int startY, int buttonRadius, int 
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
 	// Stick
-	obdPreciseEllipse(&obd, startX + (buttonMargin / 2), startY + (buttonMargin / 2), buttonRadius * 1.25, buttonRadius * 1.25, 1, 0);
+	gpDisplay->drawEllipse(startX + (buttonMargin / 2), startY + (buttonMargin / 2), buttonRadius * 1.25, buttonRadius * 1.25, 1, 0);
 
 	if (pGamepad->pressedB4()) {
 		if (pGamepad->pressedB3()) {
-			obdPreciseEllipse(&obd, startX + (buttonMargin / 5), startY + (buttonMargin / 5), buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + (buttonMargin / 5), startY + (buttonMargin / 5), buttonRadius, buttonRadius, 1, 1);
 		} else if (pGamepad->pressedB2()) {
-			obdPreciseEllipse(&obd, startX + (buttonMargin * 0.875), startY + (buttonMargin / 5), buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + (buttonMargin * 0.875), startY + (buttonMargin / 5), buttonRadius, buttonRadius, 1, 1);
 		} else {
-			obdPreciseEllipse(&obd, startX + (buttonMargin / 2), startY, buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + (buttonMargin / 2), startY, buttonRadius, buttonRadius, 1, 1);
 		}
 	} else if (pGamepad->pressedB1()) {
 		if (pGamepad->pressedB3()) {
-			obdPreciseEllipse(&obd, startX + (buttonMargin / 5), startY + (buttonMargin * 0.875), buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + (buttonMargin / 5), startY + (buttonMargin * 0.875), buttonRadius, buttonRadius, 1, 1);
 		} else if (pGamepad->pressedB2()) {
-			obdPreciseEllipse(&obd, startX + (buttonMargin * 0.875), startY + (buttonMargin * 0.875), buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + (buttonMargin * 0.875), startY + (buttonMargin * 0.875), buttonRadius, buttonRadius, 1, 1);
 		} else {
-			obdPreciseEllipse(&obd, startX + buttonMargin / 2, startY + buttonMargin, buttonRadius, buttonRadius, 1, 1);
+			gpDisplay->drawEllipse(startX + buttonMargin / 2, startY + buttonMargin, buttonRadius, buttonRadius, 1, 1);
 		}
 	} else if (pGamepad->pressedB3()) {
-		obdPreciseEllipse(&obd, startX, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
+		gpDisplay->drawEllipse(startX, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
 	} else if (pGamepad->pressedB2()) {
-		obdPreciseEllipse(&obd, startX + buttonMargin, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
+		gpDisplay->drawEllipse(startX + buttonMargin, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
 	} else {
-		obdPreciseEllipse(&obd, startX + buttonMargin / 2, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
+		gpDisplay->drawEllipse(startX + buttonMargin / 2, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
 	}
 }
 
@@ -690,10 +603,10 @@ void DisplayAddon::drawMAMEA(int startX, int startY, int buttonSize, int buttonP
 	const int buttonMargin = buttonPadding + buttonSize;
 
 	// MAME
-	obdRectangle(&obd, startX, startY + buttonMargin, startX + buttonSize, startY + buttonSize + buttonMargin, 1, pressedLeft());
-	obdRectangle(&obd, startX + buttonMargin, startY + buttonMargin, startX + buttonSize + buttonMargin, startY + buttonSize + buttonMargin, 1, pressedDown());
-	obdRectangle(&obd, startX + buttonMargin, startY, startX + buttonSize + buttonMargin, startY + buttonSize, 1, pressedUp());
-	obdRectangle(&obd, startX + buttonMargin * 2, startY + buttonMargin, startX + buttonSize + buttonMargin * 2, startY + buttonSize + buttonMargin, 1, pressedRight());
+	gpDisplay->drawRectangle(startX, startY + buttonMargin, startX + buttonSize, startY + buttonSize + buttonMargin, 1, pressedLeft());
+	gpDisplay->drawRectangle(startX + buttonMargin, startY + buttonMargin, startX + buttonSize + buttonMargin, startY + buttonSize + buttonMargin, 1, pressedDown());
+	gpDisplay->drawRectangle(startX + buttonMargin, startY, startX + buttonSize + buttonMargin, startY + buttonSize, 1, pressedUp());
+	gpDisplay->drawRectangle(startX + buttonMargin * 2, startY + buttonMargin, startX + buttonSize + buttonMargin * 2, startY + buttonSize + buttonMargin, 1, pressedRight());
 
 }
 
@@ -702,18 +615,18 @@ void DisplayAddon::drawOpenCore0WASDA(int startX, int startY, int buttonSize, in
 	const int buttonMargin = buttonPadding + buttonSize;
 
 	// Open_Core0 WASD
-	obdRectangle(&obd, startX, startY + buttonMargin, startX + buttonSize, startY + buttonSize + buttonMargin, 1, pressedLeft());
-	obdRectangle(&obd, startX + buttonMargin, startY + buttonMargin, startX + buttonSize + buttonMargin, startY + buttonSize + buttonMargin, 1, pressedDown());
-	obdRectangle(&obd, startX + buttonMargin, startY, startX + buttonSize + buttonMargin, startY + buttonSize, 1, pressedUp());
-	obdRectangle(&obd, startX + buttonMargin * 2, startY + buttonMargin, startX + buttonSize + buttonMargin * 2, startY + buttonSize + buttonMargin, 1, pressedRight());
+	gpDisplay->drawRectangle(startX, startY + buttonMargin, startX + buttonSize, startY + buttonSize + buttonMargin, 1, pressedLeft());
+	gpDisplay->drawRectangle(startX + buttonMargin, startY + buttonMargin, startX + buttonSize + buttonMargin, startY + buttonSize + buttonMargin, 1, pressedDown());
+	gpDisplay->drawRectangle(startX + buttonMargin, startY, startX + buttonSize + buttonMargin, startY + buttonSize, 1, pressedUp());
+	gpDisplay->drawRectangle(startX + buttonMargin * 2, startY + buttonMargin, startX + buttonSize + buttonMargin * 2, startY + buttonSize + buttonMargin, 1, pressedRight());
 
 	// Aux buttons
-    obdPreciseEllipse(&obd, startX - 15 + buttonMargin * 0.5, startY - 25 + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedS2());
-    obdPreciseEllipse(&obd, startX - 15 + buttonMargin * 1.25, startY - 25 + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedS1());
-    obdPreciseEllipse(&obd, startX - 15 + buttonMargin * 2, startY -25 + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedA1());
-    obdPreciseEllipse(&obd, startX - 15 + buttonMargin * 2.75, startY -25 + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedA2());
-    obdPreciseEllipse(&obd, startX - 15 + buttonMargin * 3.5, startY -25 + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedL3());
-	obdPreciseEllipse(&obd, startX - 15 + buttonMargin * 4.25, startY -25 + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedR3());
+    gpDisplay->drawEllipse(startX - 15 + buttonMargin * 0.5, startY - 25 + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedS2());
+    gpDisplay->drawEllipse(startX - 15 + buttonMargin * 1.25, startY - 25 + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedS1());
+    gpDisplay->drawEllipse(startX - 15 + buttonMargin * 2, startY -25 + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedA1());
+    gpDisplay->drawEllipse(startX - 15 + buttonMargin * 2.75, startY -25 + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedA2());
+    gpDisplay->drawEllipse(startX - 15 + buttonMargin * 3.5, startY -25 + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedL3());
+	gpDisplay->drawEllipse(startX - 15 + buttonMargin * 4.25, startY -25 + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedR3());
 
 }
 
@@ -722,13 +635,13 @@ void DisplayAddon::drawMAMEB(int startX, int startY, int buttonSize, int buttonP
 	const int buttonMargin = buttonPadding + buttonSize;
 
 	// 6-button MAME Style
-	obdRectangle(&obd, startX, startY, startX + buttonSize, startY + buttonSize, 1, pGamepad->pressedB3());
-	obdRectangle(&obd, startX + buttonMargin, startY, startX + buttonSize + buttonMargin, startY + buttonSize, 1, pGamepad->pressedB4());
-	obdRectangle(&obd, startX + buttonMargin * 2, startY, startX + buttonSize + buttonMargin * 2, startY + buttonSize, 1, pGamepad->pressedR1());
+	gpDisplay->drawRectangle(startX, startY, startX + buttonSize, startY + buttonSize, 1, pGamepad->pressedB3());
+	gpDisplay->drawRectangle(startX + buttonMargin, startY, startX + buttonSize + buttonMargin, startY + buttonSize, 1, pGamepad->pressedB4());
+	gpDisplay->drawRectangle(startX + buttonMargin * 2, startY, startX + buttonSize + buttonMargin * 2, startY + buttonSize, 1, pGamepad->pressedR1());
 
-	obdRectangle(&obd, startX, startY + buttonMargin, startX + buttonSize, startY + buttonMargin + buttonSize, 1, pGamepad->pressedB1());
-	obdRectangle(&obd, startX + buttonMargin, startY + buttonMargin, startX + buttonSize + buttonMargin, startY + buttonMargin + buttonSize, 1, pGamepad->pressedB2());
-	obdRectangle(&obd, startX + buttonMargin * 2, startY + buttonMargin, startX + buttonSize + buttonMargin * 2, startY + buttonMargin + buttonSize, 1, pGamepad->pressedR2());
+	gpDisplay->drawRectangle(startX, startY + buttonMargin, startX + buttonSize, startY + buttonMargin + buttonSize, 1, pGamepad->pressedB1());
+	gpDisplay->drawRectangle(startX + buttonMargin, startY + buttonMargin, startX + buttonSize + buttonMargin, startY + buttonMargin + buttonSize, 1, pGamepad->pressedB2());
+	gpDisplay->drawRectangle(startX + buttonMargin * 2, startY + buttonMargin, startX + buttonSize + buttonMargin * 2, startY + buttonMargin + buttonSize, 1, pGamepad->pressedR2());
 
 }
 
@@ -737,15 +650,15 @@ void DisplayAddon::drawMAME8B(int startX, int startY, int buttonSize, int button
 	const int buttonMargin = buttonPadding + buttonSize;
 
 	// 8-button MAME Style
-	obdRectangle(&obd, startX, startY, startX + buttonSize, startY + buttonSize, 1, pGamepad->pressedB3());
-	obdRectangle(&obd, startX + buttonMargin, startY - (buttonMargin / 3), startX + buttonSize + buttonMargin, startY - (buttonMargin / 3) + buttonSize, 1, pGamepad->pressedB4());
-	obdRectangle(&obd, startX + buttonMargin * 2, startY - (buttonMargin / 3), startX + buttonSize + buttonMargin * 2, startY - (buttonMargin / 3)+ buttonSize, 1, pGamepad->pressedR1());
-	obdRectangle(&obd, startX + buttonMargin * 3, startY, startX + buttonSize + buttonMargin * 3, startY + buttonSize, 1, pGamepad->pressedL1());
+	gpDisplay->drawRectangle(startX, startY, startX + buttonSize, startY + buttonSize, 1, pGamepad->pressedB3());
+	gpDisplay->drawRectangle(startX + buttonMargin, startY - (buttonMargin / 3), startX + buttonSize + buttonMargin, startY - (buttonMargin / 3) + buttonSize, 1, pGamepad->pressedB4());
+	gpDisplay->drawRectangle(startX + buttonMargin * 2, startY - (buttonMargin / 3), startX + buttonSize + buttonMargin * 2, startY - (buttonMargin / 3)+ buttonSize, 1, pGamepad->pressedR1());
+	gpDisplay->drawRectangle(startX + buttonMargin * 3, startY, startX + buttonSize + buttonMargin * 3, startY + buttonSize, 1, pGamepad->pressedL1());
 
-	obdRectangle(&obd, startX, startY + buttonMargin, startX + buttonSize, startY + buttonMargin + buttonSize, 1, pGamepad->pressedB1());
-	obdRectangle(&obd, startX + buttonMargin, startY - (buttonMargin / 3) + buttonMargin, startX + buttonSize + buttonMargin, startY - (buttonMargin / 3) + buttonMargin + buttonSize, 1, pGamepad->pressedB2());
-	obdRectangle(&obd, startX + buttonMargin * 2, startY - (buttonMargin / 3) + buttonMargin, startX + buttonSize + buttonMargin * 2, startY - (buttonMargin / 3) + buttonMargin + buttonSize, 1, pGamepad->pressedR2());
-	obdRectangle(&obd, startX + buttonMargin * 3, startY + buttonMargin, startX + buttonSize + buttonMargin * 3, startY + buttonMargin + buttonSize, 1, pGamepad->pressedL2());
+	gpDisplay->drawRectangle(startX, startY + buttonMargin, startX + buttonSize, startY + buttonMargin + buttonSize, 1, pGamepad->pressedB1());
+	gpDisplay->drawRectangle(startX + buttonMargin, startY - (buttonMargin / 3) + buttonMargin, startX + buttonSize + buttonMargin, startY - (buttonMargin / 3) + buttonMargin + buttonSize, 1, pGamepad->pressedB2());
+	gpDisplay->drawRectangle(startX + buttonMargin * 2, startY - (buttonMargin / 3) + buttonMargin, startX + buttonSize + buttonMargin * 2, startY - (buttonMargin / 3) + buttonMargin + buttonSize, 1, pGamepad->pressedR2());
+	gpDisplay->drawRectangle(startX + buttonMargin * 3, startY + buttonMargin, startX + buttonSize + buttonMargin * 3, startY + buttonMargin + buttonSize, 1, pGamepad->pressedL2());
 
 }
 
@@ -754,15 +667,15 @@ void DisplayAddon::drawOpenCore0WASDB(int startX, int startY, int buttonSize, in
 	const int buttonMargin = buttonPadding + buttonSize;
 
 	// 8-button Open_Core0 WASD
-	obdRectangle(&obd, startX, startY, startX + buttonSize, startY + buttonSize, 1, pGamepad->pressedB3());
-	obdRectangle(&obd, startX + buttonMargin, startY - (buttonMargin / 3), startX + buttonSize + buttonMargin, startY - (buttonMargin / 3) + buttonSize, 1, pGamepad->pressedB4());
-	obdRectangle(&obd, startX + buttonMargin * 2, startY - (buttonMargin / 3), startX + buttonSize + buttonMargin * 2, startY - (buttonMargin / 3)+ buttonSize, 1, pGamepad->pressedR1());
-	obdRectangle(&obd, startX + buttonMargin * 3, startY, startX + buttonSize + buttonMargin * 3, startY + buttonSize, 1, pGamepad->pressedL1());
+	gpDisplay->drawRectangle(startX, startY, startX + buttonSize, startY + buttonSize, 1, pGamepad->pressedB3());
+	gpDisplay->drawRectangle(startX + buttonMargin, startY - (buttonMargin / 3), startX + buttonSize + buttonMargin, startY - (buttonMargin / 3) + buttonSize, 1, pGamepad->pressedB4());
+	gpDisplay->drawRectangle(startX + buttonMargin * 2, startY - (buttonMargin / 3), startX + buttonSize + buttonMargin * 2, startY - (buttonMargin / 3)+ buttonSize, 1, pGamepad->pressedR1());
+	gpDisplay->drawRectangle(startX + buttonMargin * 3, startY, startX + buttonSize + buttonMargin * 3, startY + buttonSize, 1, pGamepad->pressedL1());
 
-	obdRectangle(&obd, startX, startY + buttonMargin, startX + buttonSize, startY + buttonMargin + buttonSize, 1, pGamepad->pressedB1());
-	obdRectangle(&obd, startX + buttonMargin, startY - (buttonMargin / 3) + buttonMargin, startX + buttonSize + buttonMargin, startY - (buttonMargin / 3) + buttonMargin + buttonSize, 1, pGamepad->pressedB2());
-	obdRectangle(&obd, startX + buttonMargin * 2, startY - (buttonMargin / 3) + buttonMargin, startX + buttonSize + buttonMargin * 2, startY - (buttonMargin / 3) + buttonMargin + buttonSize, 1, pGamepad->pressedR2());
-	obdRectangle(&obd, startX + buttonMargin * 3, startY + buttonMargin, startX + buttonSize + buttonMargin * 3, startY + buttonMargin + buttonSize, 1, pGamepad->pressedL2());
+	gpDisplay->drawRectangle(startX, startY + buttonMargin, startX + buttonSize, startY + buttonMargin + buttonSize, 1, pGamepad->pressedB1());
+	gpDisplay->drawRectangle(startX + buttonMargin, startY - (buttonMargin / 3) + buttonMargin, startX + buttonSize + buttonMargin, startY - (buttonMargin / 3) + buttonMargin + buttonSize, 1, pGamepad->pressedB2());
+	gpDisplay->drawRectangle(startX + buttonMargin * 2, startY - (buttonMargin / 3) + buttonMargin, startX + buttonSize + buttonMargin * 2, startY - (buttonMargin / 3) + buttonMargin + buttonSize, 1, pGamepad->pressedR2());
+	gpDisplay->drawRectangle(startX + buttonMargin * 3, startY + buttonMargin, startX + buttonSize + buttonMargin * 3, startY + buttonMargin + buttonSize, 1, pGamepad->pressedL2());
 
 }
 
@@ -782,15 +695,15 @@ void DisplayAddon::drawVewlix(int startX, int startY, int buttonRadius, int butt
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
 	// 8-button Vewlix
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 2.75), startY + (buttonMargin * 0.2), buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 3.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 4.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 5.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedL1());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 2.75), startY + (buttonMargin * 0.2), buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 3.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 4.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 5.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedL1());
 
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 2.75) - (buttonMargin / 3), startY + buttonMargin + (buttonMargin * 0.2), buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 3.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 4.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 5.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 2.75) - (buttonMargin / 3), startY + buttonMargin + (buttonMargin * 0.2), buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 3.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 4.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 5.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
 }
 
 void DisplayAddon::drawVLXB(int startX, int startY, int buttonRadius, int buttonPadding)
@@ -798,39 +711,39 @@ void DisplayAddon::drawVLXB(int startX, int startY, int buttonRadius, int button
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
 	// 9-button Hori VLX
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 2.75), startY + (buttonMargin * 0.2), buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 3.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 4.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 5.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedL1());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 2.75), startY + (buttonMargin * 0.2), buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 3.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 4.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 5.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedL1());
 
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 2.75) - (buttonMargin / 3), startY + buttonMargin + (buttonMargin * 0.2), buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 3.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 4.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 5.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 2.75) - (buttonMargin / 3), startY + buttonMargin + (buttonMargin * 0.2), buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 3.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 4.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 5.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
 
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 7.4) - (buttonMargin / 3.5), startY + buttonMargin - (buttonMargin / 1.5), buttonRadius *.8, buttonRadius * .8, 1, pGamepad->pressedS2());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 7.4) - (buttonMargin / 3.5), startY + buttonMargin - (buttonMargin / 1.5), buttonRadius *.8, buttonRadius * .8, 1, pGamepad->pressedS2());
 }
 
 void DisplayAddon::drawFightboard(int startX, int startY, int buttonRadius, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
-	obdPreciseEllipse(&obd, (startX + buttonMargin * 3.625), startY * 1.25, buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
-	obdPreciseEllipse(&obd, (startX + buttonMargin * 4.625), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
-	obdPreciseEllipse(&obd, (startX + buttonMargin * 5.625), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
-	obdPreciseEllipse(&obd, (startX + buttonMargin * 6.625), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedL1());
+	gpDisplay->drawEllipse((startX + buttonMargin * 3.625), startY * 1.25, buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
+	gpDisplay->drawEllipse((startX + buttonMargin * 4.625), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
+	gpDisplay->drawEllipse((startX + buttonMargin * 5.625), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
+	gpDisplay->drawEllipse((startX + buttonMargin * 6.625), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedL1());
 
-	obdPreciseEllipse(&obd, (startX + buttonMargin * 3.625), startY + buttonMargin * 1.25, buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
-	obdPreciseEllipse(&obd, (startX + buttonMargin * 4.625), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
-	obdPreciseEllipse(&obd, (startX + buttonMargin * 5.625), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
-	obdPreciseEllipse(&obd, (startX + buttonMargin * 6.625), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
+	gpDisplay->drawEllipse((startX + buttonMargin * 3.625), startY + buttonMargin * 1.25, buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
+	gpDisplay->drawEllipse((startX + buttonMargin * 4.625), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
+	gpDisplay->drawEllipse((startX + buttonMargin * 5.625), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
+	gpDisplay->drawEllipse((startX + buttonMargin * 6.625), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
 
     // Extra buttons
-	obdPreciseEllipse(&obd, startX + buttonMargin * 4.5, startY + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedL3());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 5.0625, startY + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedS1());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 5.625, startY + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedA1());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 6.125+0.0625, startY + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedS2());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 6.75, startY + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedR3());
+	gpDisplay->drawEllipse(startX + buttonMargin * 4.5, startY + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedL3());
+	gpDisplay->drawEllipse(startX + buttonMargin * 5.0625, startY + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedS1());
+	gpDisplay->drawEllipse(startX + buttonMargin * 5.625, startY + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedA1());
+	gpDisplay->drawEllipse(startX + buttonMargin * 6.125+0.0625, startY + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedS2());
+	gpDisplay->drawEllipse(startX + buttonMargin * 6.75, startY + (buttonMargin * 1.5), 3, 3, 1, pGamepad->pressedR3());
 }
 
 void DisplayAddon::drawVewlix7(int startX, int startY, int buttonRadius, int buttonPadding)
@@ -838,15 +751,15 @@ void DisplayAddon::drawVewlix7(int startX, int startY, int buttonRadius, int but
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
 	// 8-button Vewlix
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 2.75), startY + (buttonMargin * 0.2), buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 3.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 4.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 5.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedL1());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 2.75), startY + (buttonMargin * 0.2), buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 3.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 4.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 5.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedL1());
 
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 2.75) - (buttonMargin / 3), startY + buttonMargin + (buttonMargin * 0.2), buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 3.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 4.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
-	//obdPreciseEllipse(&obd, startX + (buttonMargin * 5.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, gamepad->pressedL2());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 2.75) - (buttonMargin / 3), startY + buttonMargin + (buttonMargin * 0.2), buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 3.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 4.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
+	//gpDisplay->drawEllipse(startX + (buttonMargin * 5.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, gamepad->pressedL2());
 }
 
 void DisplayAddon::drawSega2p(int startX, int startY, int buttonRadius, int buttonPadding)
@@ -854,15 +767,15 @@ void DisplayAddon::drawSega2p(int startX, int startY, int buttonRadius, int butt
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
 	// 8-button Sega2P
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 2.75), startY + (buttonMargin / 3), buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 3.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 4.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 5.75), startY, buttonRadius, buttonRadius, 1, pGamepad->pressedL1());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 2.75), startY + (buttonMargin / 3), buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 3.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 4.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 5.75), startY, buttonRadius, buttonRadius, 1, pGamepad->pressedL1());
 
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 2.75), startY + buttonMargin + (buttonMargin / 3), buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 3.75), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 4.75), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 5.75), startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 2.75), startY + buttonMargin + (buttonMargin / 3), buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 3.75), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 4.75), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 5.75), startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
 }
 
 void DisplayAddon::drawNoir8(int startX, int startY, int buttonRadius, int buttonPadding)
@@ -870,15 +783,15 @@ void DisplayAddon::drawNoir8(int startX, int startY, int buttonRadius, int butto
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
 	// 8-button Noir8
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 2.75), startY + (buttonMargin / 3.5), buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 3.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 4.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 5.75), startY, buttonRadius, buttonRadius, 1, pGamepad->pressedL1());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 2.75), startY + (buttonMargin / 3.5), buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 3.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 4.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 5.75), startY, buttonRadius, buttonRadius, 1, pGamepad->pressedL1());
 
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 2.75), startY + buttonMargin + (buttonMargin / 3.5), buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 3.75), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 4.75), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 5.75), startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 2.75), startY + buttonMargin + (buttonMargin / 3.5), buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 3.75), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 4.75), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 5.75), startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
 }
 
 void DisplayAddon::drawCapcom(int startX, int startY, int buttonRadius, int buttonPadding)
@@ -886,15 +799,15 @@ void DisplayAddon::drawCapcom(int startX, int startY, int buttonRadius, int butt
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
 	// 8-button Capcom
-	obdPreciseEllipse(&obd, startX + buttonMargin * 3.25, startY, buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 4.25, startY, buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 5.25, startY, buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 6.25, startY, buttonRadius, buttonRadius, 1, pGamepad->pressedL1());
+	gpDisplay->drawEllipse(startX + buttonMargin * 3.25, startY, buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
+	gpDisplay->drawEllipse(startX + buttonMargin * 4.25, startY, buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
+	gpDisplay->drawEllipse(startX + buttonMargin * 5.25, startY, buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
+	gpDisplay->drawEllipse(startX + buttonMargin * 6.25, startY, buttonRadius, buttonRadius, 1, pGamepad->pressedL1());
 
-	obdPreciseEllipse(&obd, startX + buttonMargin * 3.25, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 4.25, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 5.25, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 6.25, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
+	gpDisplay->drawEllipse(startX + buttonMargin * 3.25, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
+	gpDisplay->drawEllipse(startX + buttonMargin * 4.25, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
+	gpDisplay->drawEllipse(startX + buttonMargin * 5.25, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
+	gpDisplay->drawEllipse(startX + buttonMargin * 6.25, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
 }
 
 void DisplayAddon::drawCapcom6(int startX, int startY, int buttonRadius, int buttonPadding)
@@ -902,13 +815,13 @@ void DisplayAddon::drawCapcom6(int startX, int startY, int buttonRadius, int but
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
 	// 6-button Capcom
-	obdPreciseEllipse(&obd, startX + buttonMargin * 3.25, startY, buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 4.25, startY, buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 5.25, startY, buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
+	gpDisplay->drawEllipse(startX + buttonMargin * 3.25, startY, buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
+	gpDisplay->drawEllipse(startX + buttonMargin * 4.25, startY, buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
+	gpDisplay->drawEllipse(startX + buttonMargin * 5.25, startY, buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
 
-	obdPreciseEllipse(&obd, startX + buttonMargin * 3.25, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 4.25, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 5.25, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
+	gpDisplay->drawEllipse(startX + buttonMargin * 3.25, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
+	gpDisplay->drawEllipse(startX + buttonMargin * 4.25, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
+	gpDisplay->drawEllipse(startX + buttonMargin * 5.25, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
 }
 
 void DisplayAddon::drawSticklessButtons(int startX, int startY, int buttonRadius, int buttonPadding)
@@ -916,15 +829,15 @@ void DisplayAddon::drawSticklessButtons(int startX, int startY, int buttonRadius
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
 	// 8-button
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 2.75), startY, buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 3.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 4.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 5.75), startY, buttonRadius, buttonRadius, 1, pGamepad->pressedL1());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 2.75), startY, buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 3.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 4.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 5.75), startY, buttonRadius, buttonRadius, 1, pGamepad->pressedL1());
 
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 2.75), startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 3.75), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 4.75), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
-	obdPreciseEllipse(&obd, startX + (buttonMargin * 5.75), startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 2.75), startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 3.75), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 4.75), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
+	gpDisplay->drawEllipse(startX + (buttonMargin * 5.75), startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
 }
 
 void DisplayAddon::drawWasdButtons(int startX, int startY, int buttonRadius, int buttonPadding)
@@ -932,15 +845,15 @@ void DisplayAddon::drawWasdButtons(int startX, int startY, int buttonRadius, int
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
 	// 8-button
-	obdPreciseEllipse(&obd, startX + buttonMargin * 3.625, startY, buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 4.625, startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 5.625, startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 6.625, startY, buttonRadius, buttonRadius, 1, pGamepad->pressedL1());
+	gpDisplay->drawEllipse(startX + buttonMargin * 3.625, startY, buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
+	gpDisplay->drawEllipse(startX + buttonMargin * 4.625, startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
+	gpDisplay->drawEllipse(startX + buttonMargin * 5.625, startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
+	gpDisplay->drawEllipse(startX + buttonMargin * 6.625, startY, buttonRadius, buttonRadius, 1, pGamepad->pressedL1());
 
-	obdPreciseEllipse(&obd, startX + buttonMargin * 3.25, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 4.25, startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 5.25, startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 6.25, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
+	gpDisplay->drawEllipse(startX + buttonMargin * 3.25, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
+	gpDisplay->drawEllipse(startX + buttonMargin * 4.25, startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
+	gpDisplay->drawEllipse(startX + buttonMargin * 5.25, startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
+	gpDisplay->drawEllipse(startX + buttonMargin * 6.25, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
 }
 
 void DisplayAddon::drawArcadeButtons(int startX, int startY, int buttonRadius, int buttonPadding)
@@ -948,15 +861,15 @@ void DisplayAddon::drawArcadeButtons(int startX, int startY, int buttonRadius, i
 	const int buttonMargin = buttonPadding + (buttonRadius * 2);
 
 	// 8-button
-	obdPreciseEllipse(&obd, startX + buttonMargin * 3.125, startY, buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 4.125, startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 5.125, startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 6.125, startY, buttonRadius, buttonRadius, 1, pGamepad->pressedL1());
+	gpDisplay->drawEllipse(startX + buttonMargin * 3.125, startY, buttonRadius, buttonRadius, 1, pGamepad->pressedB3());
+	gpDisplay->drawEllipse(startX + buttonMargin * 4.125, startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB4());
+	gpDisplay->drawEllipse(startX + buttonMargin * 5.125, startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR1());
+	gpDisplay->drawEllipse(startX + buttonMargin * 6.125, startY, buttonRadius, buttonRadius, 1, pGamepad->pressedL1());
 
-	obdPreciseEllipse(&obd, startX + buttonMargin * 2.875, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 3.875, startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 4.875, startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
-	obdPreciseEllipse(&obd, startX + buttonMargin * 5.875, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
+	gpDisplay->drawEllipse(startX + buttonMargin * 2.875, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedB1());
+	gpDisplay->drawEllipse(startX + buttonMargin * 3.875, startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedB2());
+	gpDisplay->drawEllipse(startX + buttonMargin * 4.875, startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pGamepad->pressedR2());
+	gpDisplay->drawEllipse(startX + buttonMargin * 5.875, startY + buttonMargin, buttonRadius, buttonRadius, 1, pGamepad->pressedL2());
 }
 
 // I pulled this out of my PR, brought it back because of recent talks re: SOCD and rhythm games
@@ -966,20 +879,20 @@ void DisplayAddon::drawDancepadA(int startX, int startY, int buttonSize, int but
 {
 	const int buttonMargin = buttonPadding + buttonSize;
 
-	obdRectangle(&obd, startX, startY + buttonMargin, startX + buttonSize, startY + buttonSize + buttonMargin, 1, pressedLeft());
-	obdRectangle(&obd, startX + buttonMargin, startY + buttonMargin * 2, startX + buttonSize + buttonMargin, startY + buttonSize + buttonMargin * 2, 1, pressedDown());
-	obdRectangle(&obd, startX + buttonMargin, startY, startX + buttonSize + buttonMargin, startY + buttonSize, 1, pressedUp());
-	obdRectangle(&obd, startX + buttonMargin * 2, startY + buttonMargin, startX + buttonSize + buttonMargin * 2, startY + buttonSize + buttonMargin, 1, pressedRight());
+	gpDisplay->drawRectangle(startX, startY + buttonMargin, startX + buttonSize, startY + buttonSize + buttonMargin, 1, pressedLeft());
+	gpDisplay->drawRectangle(startX + buttonMargin, startY + buttonMargin * 2, startX + buttonSize + buttonMargin, startY + buttonSize + buttonMargin * 2, 1, pressedDown());
+	gpDisplay->drawRectangle(startX + buttonMargin, startY, startX + buttonSize + buttonMargin, startY + buttonSize, 1, pressedUp());
+	gpDisplay->drawRectangle(startX + buttonMargin * 2, startY + buttonMargin, startX + buttonSize + buttonMargin * 2, startY + buttonSize + buttonMargin, 1, pressedRight());
 }
 
 void DisplayAddon::drawDancepadB(int startX, int startY, int buttonSize, int buttonPadding)
 {
 	const int buttonMargin = buttonPadding + buttonSize;
 
-	obdRectangle(&obd, startX, startY, startX + buttonSize, startY + buttonSize, 1, pGamepad->pressedB2()); // Up/Left
-	obdRectangle(&obd, startX, startY + buttonMargin * 2, startX + buttonSize, startY + buttonSize + buttonMargin * 2, 1, pGamepad->pressedB4()); // Down/Left
-	obdRectangle(&obd, startX + buttonMargin * 2, startY, startX + buttonSize + buttonMargin * 2, startY + buttonSize, 1, pGamepad->pressedB1()); // Up/Right
-	obdRectangle(&obd, startX + buttonMargin * 2, startY + buttonMargin * 2, startX + buttonSize + buttonMargin * 2, startY + buttonSize + buttonMargin * 2, 1, pGamepad->pressedB3()); // Down/Right
+	gpDisplay->drawRectangle(startX, startY, startX + buttonSize, startY + buttonSize, 1, pGamepad->pressedB2()); // Up/Left
+	gpDisplay->drawRectangle(startX, startY + buttonMargin * 2, startX + buttonSize, startY + buttonSize + buttonMargin * 2, 1, pGamepad->pressedB4()); // Down/Left
+	gpDisplay->drawRectangle(startX + buttonMargin * 2, startY, startX + buttonSize + buttonMargin * 2, startY + buttonSize, 1, pGamepad->pressedB1()); // Up/Right
+	gpDisplay->drawRectangle(startX + buttonMargin * 2, startY + buttonMargin * 2, startX + buttonSize + buttonMargin * 2, startY + buttonSize + buttonMargin * 2, 1, pGamepad->pressedB3()); // Down/Right
 }
 
 void DisplayAddon::drawBlankA(int startX, int startY, int buttonSize, int buttonPadding)
@@ -996,27 +909,27 @@ void DisplayAddon::drawSplashScreen(int splashMode, uint8_t * splashChoice, int 
     switch (splashMode)
 	{
 		case SPLASH_MODE_STATIC: // Default, display static or custom image
-			obdDrawSprite(&obd, splashChoice, 128, 64, 16, 0, 0, 1);
+			gpDisplay->drawSprite(splashChoice, 128, 64, 16, 0, 0, 1);
 			break;
 		case SPLASH_MODE_CLOSEIN: // Close-in. Animate the GP2040 logo
-			obdDrawSprite(&obd, (uint8_t *)bootLogoTop, 43, 39, 6, 43, std::min<int>((mils / splashSpeed) - 39, 0), 1);
-			obdDrawSprite(&obd, (uint8_t *)bootLogoBottom, 80, 21, 10, 24, std::max<int>(64 - (mils / (splashSpeed * 2)), 44), 1);
+			gpDisplay->drawSprite((uint8_t *)bootLogoTop, 43, 39, 6, 43, std::min<int>((mils / splashSpeed) - 39, 0), 1);
+			gpDisplay->drawSprite((uint8_t *)bootLogoBottom, 80, 21, 10, 24, std::max<int>(64 - (mils / (splashSpeed * 2)), 44), 1);
 			break;
         case SPLASH_MODE_CLOSEINCUSTOM: // Close-in on custom image or delayed close-in if custom image does not exist
-            obdDrawSprite(&obd, splashChoice, 128, 64, 16, 0, 0, 1);
+            gpDisplay->drawSprite(splashChoice, 128, 64, 16, 0, 0, 1);
             if (mils > 2500) {
                 int milss = mils - 2500;
-                obdRectangle(&obd, 0, 0, 127, 1 + (milss / splashSpeed), 0, 1);
-                obdRectangle(&obd, 0, 63, 127, 62 - (milss / (splashSpeed * 2)), 0, 1);
-                obdDrawSprite(&obd, (uint8_t *)bootLogoTop, 43, 39, 6, 43, std::min<int>((milss / splashSpeed) - 39, 0), 1);
-                obdDrawSprite(&obd, (uint8_t *)bootLogoBottom, 80, 21, 10, 24, std::max<int>(64 - (milss / (splashSpeed * 2)), 44), 1);
+                gpDisplay->drawRectangle(0, 0, 127, 1 + (milss / splashSpeed), 0, 1);
+                gpDisplay->drawRectangle(0, 63, 127, 62 - (milss / (splashSpeed * 2)), 0, 1);
+                gpDisplay->drawSprite((uint8_t *)bootLogoTop, 43, 39, 6, 43, std::min<int>((milss / splashSpeed) - 39, 0), 1);
+                gpDisplay->drawSprite((uint8_t *)bootLogoBottom, 80, 21, 10, 24, std::max<int>(64 - (milss / (splashSpeed * 2)), 44), 1);
             }
             break;
 	}
 }
 
 void DisplayAddon::drawText(int x, int y, std::string text) {
-	obdWriteString(&obd, 0, x, y, (char*)text.c_str(), FONT_6x8, 0, 0);
+	gpDisplay->drawText(x, y, text);
 }
 
 void DisplayAddon::drawStatusBar(Gamepad * gamepad)
