@@ -43,7 +43,7 @@
 #endif
 
 #ifndef DISPLAY_SIZE
-#define DISPLAY_SIZE OLED_128x64
+#define DISPLAY_SIZE GPGFX_DisplaySize::SIZE_128x64
 #endif
 
 #ifndef DISPLAY_FLIP

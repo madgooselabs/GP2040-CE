@@ -9,12 +9,13 @@ GPGFX::GPGFX() {
 }
 
 void GPGFX::init(GPGFX_DisplayTypeOptions* options) {
-
-    switch (options->displayType) {
-        case GPGFX_DisplayType::SSD1306:
-            this->displayDriver = new GPGFX_OBD_SSD1306();
-            this->displayDriver->init(options);
-            break;
+    if (options->displayType != GPGFX_DisplayType::TYPE_NONE) {
+        switch (options->displayType) {
+            case GPGFX_DisplayType::TYPE_SSD1306:
+                this->displayDriver = new GPGFX_OBD_SSD1306();
+                break;
+        }
+        this->displayDriver->init(options);
     }
 }
 

@@ -4,8 +4,18 @@
 #include "peripheral_i2c.h"
 #include "peripheral_spi.h"
 
+// to retain legacy display sizes
 typedef enum {
-    SSD1306
+    SIZE_128x128 = 1,
+    SIZE_128x32,
+    SIZE_128x64,
+    SIZE_132x64,
+    SIZE_64x128,
+} GPGFX_DisplaySize;
+
+typedef enum {
+    TYPE_NONE,
+    TYPE_SSD1306
 } GPGFX_DisplayType;
 
 typedef struct {

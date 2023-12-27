@@ -28,7 +28,7 @@ void DisplayAddon::setup() {
 	GPGFX_DisplayTypeOptions gpOptions;
 
 	if (PeripheralManager::getInstance().isI2CEnabled(options.i2cBlock)) {
-		gpOptions.displayType = GPGFX_DisplayType::SSD1306;
+		gpOptions.displayType = GPGFX_DisplayType::TYPE_SSD1306;
 		gpOptions.i2c = i2c;
 	    gpOptions.size = options.size;
 		gpOptions.address = options.i2cAddress;
@@ -233,7 +233,7 @@ void DisplayAddon::process() {
 			}
 
 			if(isInputHistoryEnabled && inputHistoryAddon != nullptr) {
-				//inputHistoryAddon->drawHistory(&obd);
+				inputHistoryAddon->drawHistory(gpDisplay);
 			}
 
 			break;
