@@ -2,6 +2,8 @@
 #define _DISPLAYBASE_H_
 
 #include <string>
+#include <string.h>
+#include "pico/stdlib.h"
 #include "GPGFX_types.h"
 
 class GPGFX_DisplayBase {
@@ -11,6 +13,8 @@ class GPGFX_DisplayBase {
         virtual void setPower(bool isPowered) {}
 
         virtual void clear() {}
+
+        virtual void drawPixel(uint8_t x, uint8_t y, uint32_t color) {}
 
         virtual void drawText(uint8_t x, uint8_t y, std::string text) {}
 
@@ -23,6 +27,10 @@ class GPGFX_DisplayBase {
         virtual void drawSprite(uint8_t* spriteData, uint16_t width, uint16_t height, uint16_t pitch, uint16_t x, uint16_t y, uint8_t priority) {}
 
         virtual void drawBuffer(uint8_t *pBuffer) {}
+
+        void setMetrics(GPGFX_DisplayMetrics* metrics) { _metrics = metrics; }
+    protected:
+        GPGFX_DisplayMetrics* _metrics;
 };
 
 #endif

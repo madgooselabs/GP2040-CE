@@ -33,6 +33,10 @@ void GPGFX_OBD_SSD1306::clear() {
     clearScreen(0);
 }
 
+void GPGFX_OBD_SSD1306::drawPixel(uint8_t x, uint8_t y, uint32_t color) {
+	obdSetPixel(&obd, x, y, color, 1);
+}
+
 void GPGFX_OBD_SSD1306::drawText(uint8_t x, uint8_t y, std::string text) {
     obdWriteString(&obd, 0, x, y, (char*)text.c_str(), FONT_6x8, 0, 1);
 }

@@ -239,7 +239,7 @@ void DisplayAddon::process() {
 			break;
 	}
 
-	gpDisplay->getDriver()->drawBuffer(NULL);
+	//gpDisplay->getDriver()->drawBuffer(NULL);
 }
 
 DisplayAddon::DisplayMode DisplayAddon::getDisplayMode() {

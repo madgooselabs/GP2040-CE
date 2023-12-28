@@ -1,6 +1,7 @@
 #ifndef _GPGFX_TYPES_H_
 #define _GPGFX_TYPES_H_
 
+#include <map>
 #include "peripheral_i2c.h"
 #include "peripheral_spi.h"
 
@@ -25,10 +26,16 @@ typedef struct {
 } GPGFX_DisplayFont;
 
 typedef struct {
+    uint16_t width;
+    uint16_t height;
+    uint16_t depth; // bits per pixel
+} GPGFX_DisplayMetrics;
+
+typedef struct {
     GPGFX_DisplayType displayType;
     PeripheralI2C* i2c;
     PeripheralSPI* spi;
-    uint8_t size;
+    uint16_t size;
     uint16_t address;
     uint8_t orientation;
     bool inverted;

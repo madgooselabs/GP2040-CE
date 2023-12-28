@@ -3,6 +3,17 @@
 #include <cstring>
 
 #include "drivers/obd_ssd1306.h"
+#include "drivers/tiny_ssd1306.h"
+
+std::map<GPGFX_DisplayType, std::map<GPGFX_DisplaySize, GPGFX_DisplayMetrics>> GPGFX_DisplayModes = {
+    {
+        {TYPE_SSD1306},
+        {
+            {SIZE_128x32,{128,32,1}},
+            {SIZE_128x64,{128,64,1}},
+        },
+    },
+};
 
 GPGFX::GPGFX() {
 
@@ -12,15 +23,21 @@ void GPGFX::init(GPGFX_DisplayTypeOptions* options) {
     if (options->displayType != GPGFX_DisplayType::TYPE_NONE) {
         switch (options->displayType) {
             case GPGFX_DisplayType::TYPE_SSD1306:
-                this->displayDriver = new GPGFX_OBD_SSD1306();
+                //this->displayDriver = new GPGFX_OBD_SSD1306();
+                this->displayDriver = new GPGFX_TinySSD1306();
                 break;
         }
+        this->displayDriver->setMetrics(&GPGFX_DisplayModes[options->displayType][(GPGFX_DisplaySize)options->size]);
         this->displayDriver->init(options);
     }
 }
 
 void GPGFX::clearScreen() {
     this->displayDriver->clear();
+}
+
+void GPGFX::drawPixel(uint16_t x, uint16_t y, uint32_t color) {
+    this->displayDriver->drawPixel(x, y, color);
 }
 
 void GPGFX::drawText(uint16_t x, uint16_t y, std::string text) {
