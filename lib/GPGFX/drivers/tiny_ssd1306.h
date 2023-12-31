@@ -3,6 +3,7 @@
 
 #include "GPGFX_types.h"
 #include "displaybase.h"
+#include "math.h"
 
 class GPGFX_TinySSD1306 : public GPGFX_DisplayBase {
     public:
