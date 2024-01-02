@@ -7,16 +7,16 @@ PeripheralI2C::PeripheralI2C() {
     _SDA = PICO_DEFAULT_I2C_SDA_PIN;
     _SCL = PICO_DEFAULT_I2C_SCL_PIN;
     _Speed = DEFAULT_SPEED;
-    setup();
 #endif
 }
 
-PeripheralI2C::PeripheralI2C(uint8_t block, uint8_t sda, uint8_t scl, uint32_t speed) {
+void PeripheralI2C::setConfig(uint8_t block, uint8_t sda, uint8_t scl, uint32_t speed) {
     if (block < NUM_I2CS) {
         _I2C = _hardwareBlocks[block];
         _SDA = sda;
         _SCL = scl;
         _Speed = speed;
+        configured = true;
         setup();
     } else {
         // currently not supported
@@ -36,7 +36,16 @@ void PeripheralI2C::setup() {
 }
 
 int16_t PeripheralI2C::read(uint8_t address, uint8_t *data, uint16_t len, bool isBlock) {
-    return i2c_read_blocking(_I2C, address, data, len, isBlock);
+    int16_t result = i2c_read_blocking(_I2C, address, data, len, isBlock);
+#ifdef DEBUG_PERIPHERALI2C
+    printf("PeripheralI2C::write %d:%d (blocking? %d)\n", address, len, isBlock);
+    for (int i = 0; i < len; i++) {
+        printf("%02x ", data[i]);
+    }
+    printf("\nResult: %d\n", result);
+    printf("-----\n");
+#endif    
+    return result;
 }
 
 int16_t PeripheralI2C::readRegister(uint8_t address, uint8_t reg, uint8_t *data, uint16_t len) {
@@ -49,7 +58,18 @@ int16_t PeripheralI2C::readRegister(uint8_t address, uint8_t reg, uint8_t *data,
 }
 
 int16_t PeripheralI2C::write(uint8_t address, uint8_t *data, uint16_t len, bool isBlock) {
-    return i2c_write_blocking(_I2C, address, data, len, isBlock);
+#ifdef DEBUG_PERIPHERALI2C
+    printf("PeripheralI2C::write %d:%d (blocking? %d)\n", address, len, isBlock);
+    for (int i = 0; i < len; i++) {
+        printf("%02x ", data[i]);
+    }
+#endif
+    int16_t result = i2c_write_blocking(_I2C, address, data, len, isBlock);
+#ifdef DEBUG_PERIPHERALI2C
+    printf("\nResult: %d\n", result);
+    printf("-----\n");
+#endif
+    return result;
 }
 
 uint8_t PeripheralI2C::test(uint8_t address) {

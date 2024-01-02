@@ -5,13 +5,18 @@
 #include <hardware/i2c.h>
 #include <hardware/platform_defs.h>
 
+#define DEBUG_PERIPHERALI2C
+
 class PeripheralI2C {
 public:
     PeripheralI2C();
-    PeripheralI2C(uint8_t block, uint8_t sda, uint8_t scl, uint32_t speed);
     ~PeripheralI2C() {}
 
+    bool configured = false;
+
     i2c_inst_t* getController() { return _I2C; }
+
+    void setConfig(uint8_t block, uint8_t sda, uint8_t scl, uint32_t speed);
 
     int16_t read(uint8_t address, uint8_t *data, uint16_t len, bool isBlock=false);
     int16_t readRegister(uint8_t address, uint8_t reg, uint8_t *data, uint16_t len);

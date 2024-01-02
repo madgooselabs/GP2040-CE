@@ -23,6 +23,8 @@ void DisplayAddon::setup() {
 	const DisplayOptions& options = Storage::getInstance().getDisplayOptions();
 	PeripheralI2C* i2c = PeripheralManager::getInstance().getI2C(options.i2cBlock);
 
+	stdio_init_all();
+
 	gpDisplay = new GPGFX();
 
 	GPGFX_DisplayTypeOptions gpOptions;
@@ -239,7 +241,10 @@ void DisplayAddon::process() {
 			break;
 	}
 
+	gpDisplay->drawPixel(20, 20, 1);
+	printf("DisplayAddon::process\n");
 	gpDisplay->getDriver()->drawBuffer(NULL);
+	printf("DisplayAddon::process(end)\n");
 }
 
 DisplayAddon::DisplayMode DisplayAddon::getDisplayMode() {

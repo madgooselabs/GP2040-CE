@@ -56,6 +56,8 @@ class GPGFX_TinySSD1306 : public GPGFX_DisplayBase {
             SET_VCOM_DETECT = 0xDB,
         } CommandOps;
 
+        bool _isPowered = false;
+
         static const uint16_t MAX_SCREEN_WIDTH = 128;
         static const uint16_t MAX_SCREEN_HEIGHT = 64;
         static const uint16_t MAX_SCREEN_SIZE = (MAX_SCREEN_WIDTH * MAX_SCREEN_HEIGHT / 8);
@@ -66,6 +68,7 @@ class GPGFX_TinySSD1306 : public GPGFX_DisplayBase {
         void sendCommands(uint8_t* commands, uint16_t length);
 
         uint8_t frameBuffer[MAX_SCREEN_SIZE];
+        uint8_t framePage = 0;
 };
 
 #endif
