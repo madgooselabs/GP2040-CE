@@ -5,7 +5,7 @@
 #include <hardware/i2c.h>
 #include <hardware/platform_defs.h>
 
-#define DEBUG_PERIPHERALI2C
+//#define DEBUG_PERIPHERALI2C
 
 class PeripheralI2C {
 public:

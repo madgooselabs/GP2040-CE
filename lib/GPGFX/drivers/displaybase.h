@@ -8,7 +8,7 @@
 
 class GPGFX_DisplayBase {
     public:
-        virtual void init(GPGFX_DisplayTypeOptions* options) {}
+        virtual void init(GPGFX_DisplayTypeOptions options) {}
 
         virtual void setPower(bool isPowered) {}
 

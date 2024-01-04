@@ -11,7 +11,7 @@ class GPGFX {
     public:
         GPGFX();
 
-        void init(GPGFX_DisplayTypeOptions* options);
+        void init(GPGFX_DisplayTypeOptions options);
 
         GPGFX_DisplayBase* getDriver() { return displayDriver; }
 

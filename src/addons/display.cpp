@@ -23,7 +23,7 @@ void DisplayAddon::setup() {
 	const DisplayOptions& options = Storage::getInstance().getDisplayOptions();
 	PeripheralI2C* i2c = PeripheralManager::getInstance().getI2C(options.i2cBlock);
 
-	stdio_init_all();
+	//stdio_init_all();
 
 	gpDisplay = new GPGFX();
 
@@ -38,7 +38,7 @@ void DisplayAddon::setup() {
 		gpOptions.inverted = options.invert;
 	}
 
-	gpDisplay->init(&gpOptions);
+	gpDisplay->init(gpOptions);
 
 	gamepad = Storage::getInstance().GetGamepad();
 	pGamepad = Storage::getInstance().GetProcessedGamepad();
@@ -241,10 +241,11 @@ void DisplayAddon::process() {
 			break;
 	}
 
-	gpDisplay->drawPixel(20, 20, 1);
-	printf("DisplayAddon::process\n");
+	//gpDisplay->drawPixel(20, 20, 1);
+	//gpDisplay->drawPixel(40, 20, 1);
+	//printf("DisplayAddon::process\n");
 	gpDisplay->getDriver()->drawBuffer(NULL);
-	printf("DisplayAddon::process(end)\n");
+	//printf("DisplayAddon::process(end)\n");
 }
 
 DisplayAddon::DisplayMode DisplayAddon::getDisplayMode() {

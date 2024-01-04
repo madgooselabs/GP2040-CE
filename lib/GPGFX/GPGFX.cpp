@@ -19,18 +19,18 @@ GPGFX::GPGFX() {
     
 }
 
-void GPGFX::init(GPGFX_DisplayTypeOptions* options) {
-    switch (options->displayType) {
+void GPGFX::init(GPGFX_DisplayTypeOptions options) {
+    switch (options.displayType) {
         case GPGFX_DisplayType::TYPE_SSD1306:
             //this->displayDriver = new GPGFX_OBD_SSD1306();
             this->displayDriver = new GPGFX_TinySSD1306();
             break;
         default:
-            options->displayType = GPGFX_DisplayType::TYPE_NONE;
+            options.displayType = GPGFX_DisplayType::TYPE_NONE;
     }
 
-    if (options->displayType != GPGFX_DisplayType::TYPE_NONE) {
-        this->displayDriver->setMetrics(&GPGFX_DisplayModes[options->displayType][(GPGFX_DisplaySize)options->size]);
+    if (options.displayType != GPGFX_DisplayType::TYPE_NONE) {
+        this->displayDriver->setMetrics(&GPGFX_DisplayModes[options.displayType][(GPGFX_DisplaySize)options.size]);
         this->displayDriver->init(options);
     }
 }

@@ -7,7 +7,7 @@
 
 class GPGFX_TinySSD1306 : public GPGFX_DisplayBase {
     public:
-        void init(GPGFX_DisplayTypeOptions* options);
+        void init(GPGFX_DisplayTypeOptions options);
 
         void setPower(bool isPowered);
 
@@ -62,7 +62,7 @@ class GPGFX_TinySSD1306 : public GPGFX_DisplayBase {
         static const uint16_t MAX_SCREEN_HEIGHT = 64;
         static const uint16_t MAX_SCREEN_SIZE = (MAX_SCREEN_WIDTH * MAX_SCREEN_HEIGHT / 8);
 
-        GPGFX_DisplayTypeOptions* _options;
+        GPGFX_DisplayTypeOptions _options;
 
         void sendCommand(uint8_t command);
         void sendCommands(uint8_t* commands, uint16_t length);
