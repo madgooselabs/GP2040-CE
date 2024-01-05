@@ -7,6 +7,10 @@
 #include "GPGFX_types.h"
 #include "drivers/displaybase.h"
 
+#include "fonts/GP_Font_Basic.h"
+#include "fonts/GP_Font_Big.h"
+#include "fonts/GP_Font_Standard.h"
+
 class GPGFX {
     public:
         GPGFX();

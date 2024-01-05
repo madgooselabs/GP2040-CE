@@ -10,8 +10,6 @@ void GPGFX_TinySSD1306::init(GPGFX_DisplayTypeOptions options) {
     _options.inverted = options.inverted;
     _options.font = options.font;
 
-	//printf("GPGFX_TinySSD1306::init\n");
-
 	uint8_t commands[] = {
 		0x00,
 		CommandOps::DISPLAY_OFF,
@@ -58,7 +56,6 @@ void GPGFX_TinySSD1306::init(GPGFX_DisplayTypeOptions options) {
 	sendCommands(commands, sizeof(commands));
 
 	clear();
-	//drawPixel(5, 5, 1);
 	drawBuffer(NULL);
 }
 
@@ -71,18 +68,42 @@ void GPGFX_TinySSD1306::clear() {
 }
 
 void GPGFX_TinySSD1306::drawPixel(uint8_t x, uint8_t y, uint32_t color) {
-	uint16_t by, bi;
+	uint16_t row, bitIndex;
 
 	if ((x<MAX_SCREEN_WIDTH) and (y<MAX_SCREEN_HEIGHT))
 	{
-		by=((y/8)*128)+x;
-		bi=y % 8;
+		row=((y/8)*128)+x;
+		bitIndex=y % 8;
 
-		frameBuffer[by] |= (color<<bi);
+		frameBuffer[row] |= (color<<bitIndex);
 	}
 }
 
 void GPGFX_TinySSD1306::drawText(uint8_t x, uint8_t y, std::string text) {
+	uint8_t spriteX, spriteY;
+	uint8_t spriteByte;
+	uint8_t spriteBit;
+	uint8_t color;
+	uint8_t currChar, glyphIndex;
+	uint8_t charOffset;
+	const uint8_t* currGlyph;
+
+	for (uint8_t charIndex = 0; charIndex < text.size(); charIndex++) {
+		currChar = text[charIndex];
+		glyphIndex = currChar - GPGFX_FONT_CHAR_OFFSET;
+		currGlyph = &_options.font.fontData[glyphIndex * ((_options.font.width - 1) * (_options.font.height/8))];
+
+		for (spriteY = 0; spriteY < _options.font.height; spriteY++) {
+			for (spriteX = 0; spriteX < _options.font.width-1; spriteX++) {
+				spriteBit = spriteY % 8;
+				spriteByte = currGlyph[spriteX];
+				color = ((spriteByte >> spriteBit) & 0x01);
+				drawPixel(((x*_options.font.width)+spriteX)+charOffset, (y*_options.font.height)+spriteY, color);
+			}
+		}
+
+		charOffset += _options.font.width;
+	}
 }
 
 void GPGFX_TinySSD1306::drawLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint32_t color, uint8_t filled) {
@@ -165,24 +186,29 @@ void GPGFX_TinySSD1306::drawRectangle(uint16_t x, uint16_t y, uint16_t width, ui
 	}
 }
 
-void GPGFX_TinySSD1306::drawSprite(uint8_t* image, uint16_t width, uint16_t height, uint16_t pitch, uint16_t anchorX, uint16_t anchorY, uint8_t priority) {
+void GPGFX_TinySSD1306::drawSprite(uint8_t* image, uint16_t width, uint16_t height, uint16_t pitch, uint16_t x, uint16_t y, uint8_t priority) {
+	uint8_t spriteByte;
+	uint8_t spriteBit;
+	uint8_t spriteX, spriteY;
+	uint8_t color;
 
+	for (spriteY = 0; spriteY < height; spriteY++) {
+		for (spriteX = 0; spriteX < width; spriteX++) {
+			spriteBit = spriteX % 8;
+			spriteByte = image[(spriteY * (width / 8)) + (spriteX / 8)];
+			color = ((spriteByte >> (7 - spriteBit)) & 0x01);
+
+			drawPixel(x+spriteX, y+spriteY, color);
+		}
+	}
 }
 
 void GPGFX_TinySSD1306::drawBuffer(uint8_t* pBuffer) {
-	//printf("GPGFX_TinySSD1306::drawBuffer(start)\n");
 	uint16_t bufferSize = MAX_SCREEN_SIZE;
 	uint8_t buffer[bufferSize+1] = {SET_START_LINE};
 
 	int result = -1;
 	
-	//uint8_t commands[] = {0x00, (uint8_t)(0xB0 | framePage), 0x00, 0x10};
-	//uint8_t commands[] = {
-	//	0x00, 
-	//	CommandOps::PAGE_ADDRESS, 0x00, 0x07,
-	//	CommandOps::COLUMN_ADDRESS, 0x00, 0x7F
-	//};
-	//sendCommands(commands,sizeof(commands));
 	sendCommand(CommandOps::PAGE_ADDRESS);
 	sendCommand(0x00);
 	sendCommand(0x07);
@@ -196,46 +222,18 @@ void GPGFX_TinySSD1306::drawBuffer(uint8_t* pBuffer) {
 	}
 	result = _options.i2c->write(_options.address, buffer, sizeof(buffer), false);
 
-	//for (int i = 1; i < sizeof(buffer); i++) {
-	//	printf("%02x ", buffer[i]);
-	//}
-	//printf("\n------------\n");
-	//printf("GPGFX_TinySSD1306::drawBuffer(i2c):%d\n",result);
-
-	//sendCommands(commands,sizeof(commands));
-
-	//for (uint8_t row = 0; row < (MAX_SCREEN_WIDTH/bufferSize); row++) {
-	//	if (pBuffer == NULL) {
-	//		//printf("GPGFX_TinySSD1306::drawBuffer(param)\n");
-	//		memcpy(&drawBuffer[1],&frameBuffer[row * bufferSize],bufferSize);
-	//	} else {
-	//		//printf("GPGFX_TinySSD1306::drawBuffer(no param)\n");
-	//		memcpy(&drawBuffer[1],&pBuffer[row * bufferSize],bufferSize);
-	//	}
-	//	result = _options->i2c->write(_options->address, drawBuffer, sizeof(drawBuffer), true);
-	//	printf("GPGFX_TinySSD1306::drawBuffer(i2c):%d\n",result);
-	//}
-	//result = _options->i2c->write(_options->address, drawBuffer, 5, true);
-	//printf("GPGFX_TinySSD1306::drawBuffer(i2c):%d\n",result);
-
 	if (framePage < MAX_SCREEN_HEIGHT/8) {
 		framePage++;
 	} else {
 		framePage = 0;
 	}
-
-	//sleep_us(100);
-
-	//printf("GPGFX_TinySSD1306::drawBuffer(end)\n");
 }
 
 void GPGFX_TinySSD1306::sendCommand(uint8_t command){ 
 	uint8_t commandData[] = {0x00, command};
-	//printf("GPGFX_TinySSD1306::sendCommand(%02x)\n", command);
 	sendCommands(commandData, 2);
 }
 
 void GPGFX_TinySSD1306::sendCommands(uint8_t* commands, uint16_t length){ 
-	//printf("GPGFX_TinySSD1306::sendCommands() addr: %d\n", _options.address);
 	int result = _options.i2c->write(_options.address, commands, length, false);
 }

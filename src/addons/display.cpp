@@ -36,6 +36,9 @@ void DisplayAddon::setup() {
 		gpOptions.address = options.i2cAddress;
 		gpOptions.orientation = options.flip;
 		gpOptions.inverted = options.invert;
+		gpOptions.font.fontData = GP_Font_Standard;
+		gpOptions.font.width = 6;
+		gpOptions.font.height = 8;
 	}
 
 	gpDisplay->init(gpOptions);
@@ -241,11 +244,7 @@ void DisplayAddon::process() {
 			break;
 	}
 
-	//gpDisplay->drawPixel(20, 20, 1);
-	//gpDisplay->drawPixel(40, 20, 1);
-	//printf("DisplayAddon::process\n");
 	gpDisplay->getDriver()->drawBuffer(NULL);
-	//printf("DisplayAddon::process(end)\n");
 }
 
 DisplayAddon::DisplayMode DisplayAddon::getDisplayMode() {

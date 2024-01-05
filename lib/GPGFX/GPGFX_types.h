@@ -5,6 +5,8 @@
 #include "peripheral_i2c.h"
 #include "peripheral_spi.h"
 
+#define GPGFX_FONT_CHAR_OFFSET 32
+
 // to retain legacy display sizes
 typedef enum {
     SIZE_128x128 = 1,
@@ -22,7 +24,7 @@ typedef enum {
 typedef struct {
     uint8_t width;
     uint8_t height;
-    uint8_t* fontData;
+    const uint8_t* fontData;
 } GPGFX_DisplayFont;
 
 typedef struct {
