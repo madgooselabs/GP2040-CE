@@ -1,5 +1,6 @@
 add_library(GPGFX 
     GPGFX.cpp
+    GPGFX_UI.cpp
     drivers/obd_ssd1306.cpp
     drivers/tiny_ssd1306.cpp
 )

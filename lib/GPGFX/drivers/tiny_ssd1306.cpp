@@ -195,7 +195,8 @@ void GPGFX_TinySSD1306::drawSprite(uint8_t* image, uint16_t width, uint16_t heig
 	for (spriteY = 0; spriteY < height; spriteY++) {
 		for (spriteX = 0; spriteX < width; spriteX++) {
 			spriteBit = spriteX % 8;
-			spriteByte = image[(spriteY * (width / 8)) + (spriteX / 8)];
+			//spriteByte = image[(spriteY * (width / 8)) + (spriteX / 8)];
+			spriteByte = image[(spriteY * ((width + 7) / 8)) + (spriteX / 8)];
 			color = ((spriteByte >> (7 - spriteBit)) & 0x01);
 
 			drawPixel(x+spriteX, y+spriteY, color);

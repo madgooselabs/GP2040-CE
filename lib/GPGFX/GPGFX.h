@@ -7,6 +7,8 @@
 #include "GPGFX_types.h"
 #include "drivers/displaybase.h"
 
+#include "GPGFX_UI.h"
+
 #include "fonts/GP_Font_Basic.h"
 #include "fonts/GP_Font_Big.h"
 #include "fonts/GP_Font_Standard.h"
@@ -17,6 +19,7 @@ class GPGFX {
 
         void init(GPGFX_DisplayTypeOptions options);
 
+        GPGFX_UI getUI() { return uiRenderer; }
         GPGFX_DisplayBase* getDriver() { return displayDriver; }
 
         // drawing methods
@@ -29,6 +32,8 @@ class GPGFX {
         void drawRectangle(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color, uint8_t filled);
         void drawSprite(uint8_t* spriteData, uint16_t width, uint16_t height, uint16_t pitch, uint16_t x, uint16_t y, uint8_t priority);
     private:
+        GPGFX_UI uiRenderer;
+
         GPGFX_DisplayBase* displayDriver = nullptr;
 };
 

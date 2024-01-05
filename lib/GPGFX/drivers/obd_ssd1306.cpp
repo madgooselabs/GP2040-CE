@@ -1,17 +1,26 @@
 #include "obd_ssd1306.h"
 
-void GPGFX_OBD_SSD1306::init(GPGFX_DisplayTypeOptions* options) {
-    _options = options;
+void GPGFX_OBD_SSD1306::init(GPGFX_DisplayTypeOptions options) {
+    _options.displayType = options.displayType;
+    _options.i2c = options.i2c;
+    _options.spi = options.spi;
+    _options.size = options.size;
+    _options.address = options.address;
+    _options.orientation = options.orientation;
+    _options.inverted = options.inverted;
+    _options.font = options.font;
 
     obdI2CInit(&obd,
-        _options->size,
-        _options->address,
-        _options->orientation,
-        _options->inverted,
+        _options.size,
+        _options.address,
+        _options.orientation,
+        _options.inverted,
         1,
-        _options->i2c,
+        _options.i2c,
         -1
     );
+
+	obdSetFonts(GP_Font_Standard, GP_Font_Basic, GP_Font_Big);
 
 	const int detectedDisplay = initDisplay(0);
 	if (isSH1106(detectedDisplay)) {
@@ -65,12 +74,12 @@ void GPGFX_OBD_SSD1306::drawBuffer(uint8_t *pBuffer) {
 
 int GPGFX_OBD_SSD1306::initDisplay(int typeOverride) {
 	return obdI2CInit(&obd,
-	    typeOverride > 0 ? typeOverride : _options->size,
-		_options->address,
-		_options->orientation,
-		_options->inverted,
+	    typeOverride > 0 ? typeOverride : _options.size,
+		_options.address,
+		_options.orientation,
+		_options.inverted,
 		1,
-		_options->i2c,
+		_options.i2c,
 		-1
     );
 }

@@ -127,6 +127,14 @@ void DisplayAddon::process() {
 			}
 			drawSplashScreen(getDisplayOptions().splashMode, (uint8_t*) Storage::getInstance().getDisplayOptions().splashImage.bytes, 90);
 			break;
+		case DisplayAddon::DisplayMode::MAIN_MENU:
+			if (pressedLeft()) {
+
+			} else if (pressedRight()) {
+				
+			}
+			gpDisplay->getUI().update();
+			break;
 		case DisplayAddon::DisplayMode::BUTTONS:
 			drawStatusBar(gamepad);
 			const DisplayOptions& options = getDisplayOptions();
@@ -278,7 +286,7 @@ DisplayAddon::DisplayMode DisplayAddon::getDisplayMode() {
 		}
 	}
 
-	return DisplayAddon::DisplayMode::BUTTONS;
+	return DisplayAddon::DisplayMode::MAIN_MENU;
 }
 
 const DisplayOptions& DisplayAddon::getDisplayOptions() {
@@ -918,7 +926,7 @@ void DisplayAddon::drawSplashScreen(int splashMode, uint8_t * splashChoice, int 
 			break;
 		case SPLASH_MODE_CLOSEIN: // Close-in. Animate the GP2040 logo
 			gpDisplay->drawSprite((uint8_t *)bootLogoTop, 43, 39, 6, 43, std::min<int>((mils / splashSpeed) - 39, 0), 1);
-			gpDisplay->drawSprite((uint8_t *)bootLogoBottom, 80, 21, 10, 24, std::max<int>(64 - (mils / (splashSpeed * 2)), 44), 1);
+			gpDisplay->drawSprite((uint8_t *)bootLogoBottom, 128, 35, 10, 0, std::max<int>(64 - (mils / (splashSpeed * 2)), 30), 1);
 			break;
         case SPLASH_MODE_CLOSEINCUSTOM: // Close-in on custom image or delayed close-in if custom image does not exist
             gpDisplay->drawSprite(splashChoice, 128, 64, 16, 0, 0, 1);
@@ -927,7 +935,7 @@ void DisplayAddon::drawSplashScreen(int splashMode, uint8_t * splashChoice, int 
                 gpDisplay->drawRectangle(0, 0, 127, 1 + (milss / splashSpeed), 0, 1);
                 gpDisplay->drawRectangle(0, 63, 127, 62 - (milss / (splashSpeed * 2)), 0, 1);
                 gpDisplay->drawSprite((uint8_t *)bootLogoTop, 43, 39, 6, 43, std::min<int>((milss / splashSpeed) - 39, 0), 1);
-                gpDisplay->drawSprite((uint8_t *)bootLogoBottom, 80, 21, 10, 24, std::max<int>(64 - (milss / (splashSpeed * 2)), 44), 1);
+                gpDisplay->drawSprite((uint8_t *)bootLogoBottom, 128, 35, 10, 0, std::max<int>(64 - (mils / (splashSpeed * 2)), 30), 1);
             }
             break;
 	}

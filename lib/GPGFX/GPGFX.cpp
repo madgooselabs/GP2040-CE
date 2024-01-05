@@ -33,6 +33,8 @@ void GPGFX::init(GPGFX_DisplayTypeOptions options) {
         this->displayDriver->setMetrics(&GPGFX_DisplayModes[options.displayType][(GPGFX_DisplaySize)options.size]);
         this->displayDriver->init(options);
     }
+
+    getUI().init();
 }
 
 void GPGFX::clearScreen() {

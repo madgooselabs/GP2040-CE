@@ -1,3 +1,6 @@
+#ifndef _GP_FONT_STANDARD_H_
+#define _GP_FONT_STANDARD_H_
+
 // 5x7 font (in 6x8 cell)
 const uint8_t GP_Font_Standard[] = {
 	0x00, 0x00, 0x00, 0x00, 0x00,
@@ -126,3 +129,5 @@ const uint8_t GP_Font_Standard[] = {
 	0x0f, 0x05, 0x52, 0x68, 0x28, // PS button
 	0x38, 0x44, 0x5f, 0x4e, 0x04, // share
 };
+
+#endif

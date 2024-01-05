@@ -1,13 +1,14 @@
 #ifndef _GPGFX_OBD_SSD1306_H_
 #define _GPGFX_OBD_SSD1306_H_
 
+#include "GPGFX.h"
 #include "GPGFX_types.h"
 #include "displaybase.h"
 #include "OneBitDisplay.h"
 
 class GPGFX_OBD_SSD1306 : public GPGFX_DisplayBase {
     public:
-        void init(GPGFX_DisplayTypeOptions* options);
+        void init(GPGFX_DisplayTypeOptions options);
 
         void setPower(bool isPowered);
 
@@ -28,7 +29,7 @@ class GPGFX_OBD_SSD1306 : public GPGFX_DisplayBase {
         void drawBuffer(uint8_t *pBuffer);
     private:
         OBDISP obd;
-        GPGFX_DisplayTypeOptions* _options;
+        GPGFX_DisplayTypeOptions _options;
 
 	    int initDisplay(int typeOverride);
         bool isSH1106(int detectedDisplay);

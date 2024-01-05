@@ -226,6 +226,7 @@ private:
 	enum DisplayMode {
 		CONFIG_INSTRUCTION,
 		BUTTONS,
+		MAIN_MENU,
 		SPLASH
 	};
 
