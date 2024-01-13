@@ -63,7 +63,8 @@ public:
 	virtual void preprocess() {}
 	virtual void process();
 	virtual std::string name() { return InputHistoryName; }
-	virtual void drawHistory(GPGFX *gpDisplay);
+	void drawHistory(GPGFX *gpDisplay);
+	std::string getHistory();
 private:
 	uint32_t historyLength;
 	uint32_t col;

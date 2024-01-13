@@ -205,6 +205,10 @@ void InputHistoryAddon::drawHistory(GPGFX *gpDisplay) {
 	gpDisplay->drawText(col * 6, row, (char *)historyString.c_str());
 }
 
+std::string InputHistoryAddon::getHistory() {
+	return historyString;
+}
+
 bool InputHistoryAddon::pressedUp()
 {
 	switch (gamepad->getOptions().dpadMode)

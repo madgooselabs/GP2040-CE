@@ -33,12 +33,14 @@ void GPGFX::init(GPGFX_DisplayTypeOptions options) {
         this->displayDriver->setMetrics(&GPGFX_DisplayModes[options.displayType][(GPGFX_DisplaySize)options.size]);
         this->displayDriver->init(options);
     }
-
-    getUI().init();
 }
 
 void GPGFX::clearScreen() {
     this->displayDriver->clear();
+}
+
+void GPGFX::render() {
+    this->displayDriver->drawBuffer(NULL);
 }
 
 void GPGFX::drawPixel(uint16_t x, uint16_t y, uint32_t color) {

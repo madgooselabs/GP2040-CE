@@ -1,15 +1,6 @@
-#include "GPGFX.h"
+#include "GPGFX_UI.h"
 
 #include <cstring>
 
 GPGFX_UI::GPGFX_UI() {
-
-}
-
-void GPGFX_UI::init() {
-
-}
-
-void GPGFX_UI::update() {
-
 }

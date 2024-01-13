@@ -6,9 +6,13 @@
 #ifndef DISPLAY_H_
 #define DISPLAY_H_
 
+#include <map>
 #include <string>
 #include <hardware/i2c.h>
 #include "GPGFX.h"
+#include "GPGFX_UI.h"
+#include "GPGFX_UI_types.h"
+#include "GPGFX_UI_widgets.h"
 #include "BoardConfig.h"
 #include "gpaddon.h"
 #include "gamepad.h"
@@ -168,45 +172,9 @@ public:
 	virtual std::string name() { return DisplayName; }
 	virtual void attachInputHistoryAddon(InputHistoryAddon*);
 private:
-	void drawStickless(int startX, int startY, int buttonRadius, int buttonPadding);
-	void drawWasdBox(int startX, int startY, int buttonRadius, int buttonPadding);
-	void drawArcadeStick(int startX, int startY, int buttonRadius, int buttonPadding);
 	void drawStatusBar(Gamepad*);
 	void drawText(int startX, int startY, std::string text);
 	void initMenu(char**);
-	//Adding my stuff here, remember to sort before PR
-	void drawDiamond(int cx, int cy, int size, uint8_t colour, uint8_t filled);
-	void drawUDLR(int startX, int startY, int buttonRadius, int buttonPadding);
-	void drawMAMEA(int startX, int startY, int buttonSize, int buttonPadding);
-	void drawOpenCore0WASDA(int startX, int startY, int buttonSize, int buttonPadding);
-	void drawOpenCore0WASDB(int startX, int startY, int buttonSize, int buttonPadding);
-	void drawMAMEB(int startX, int startY, int buttonSize, int buttonPadding);
-	void drawMAME8B(int startX, int startY, int buttonSize, int buttonPadding);
-	void drawKeyboardAngled(int startX, int startY, int buttonRadius, int buttonPadding);
-	void drawVewlix(int startX, int startY, int buttonRadius, int buttonPadding);
-	void drawVewlix7(int startX, int startY, int buttonRadius, int buttonPadding);
-	void drawSega2p(int startX, int startY, int buttonRadius, int buttonPadding);
-	void drawNoir8(int startX, int startY, int buttonRadius, int buttonPadding);
-	void drawCapcom(int startX, int startY, int buttonRadius, int buttonPadding);
-	void drawCapcom6(int startX, int startY, int buttonRadius, int buttonPadding);
-	void drawSticklessButtons(int startX, int startY, int buttonRadius, int buttonPadding);
-	void drawWasdButtons(int startX, int startY, int buttonRadius, int buttonPadding);
-	void drawArcadeButtons(int startX, int startY, int buttonRadius, int buttonPadding);
-	void drawSplashScreen(int splashMode, uint8_t* splashChoice, int splashSpeed);
-	void drawDancepadA(int startX, int startY, int buttonSize, int buttonPadding);
-	void drawDancepadB(int startX, int startY, int buttonSize, int buttonPadding);
-	void drawTwinStickA(int startX, int startY, int buttonSize, int buttonPadding);
-	void drawTwinStickB(int startX, int startY, int buttonSize, int buttonPadding);
-	void drawBlankA(int startX, int startY, int buttonSize, int buttonPadding);
-	void drawBlankB(int startX, int startY, int buttonSize, int buttonPadding);
-	void drawVLXA(int startX, int startY, int buttonRadius, int buttonPadding);
-	void drawVLXB(int startX, int startY, int buttonRadius, int buttonPadding);
-	void drawButtonLayoutLeft(ButtonLayoutParamsLeft& options);
-	void drawButtonLayoutRight(ButtonLayoutParamsRight& options);
-	void drawFightboard(int startX, int startY, int buttonRadius, int buttonPadding);
-	void drawFightboardMirrored(int startX, int startY, int buttonRadius, int buttonPadding);
-	void drawFightboardStick(int startX, int startY, int buttonRadius, int buttonPadding);
-	void drawFightboardStickMirrored(int startX, int startY, int buttonRadius, int buttonPadding);
 	bool pressedUp();
 	bool pressedDown();
 	bool pressedLeft();
@@ -226,13 +194,33 @@ private:
 	enum DisplayMode {
 		CONFIG_INSTRUCTION,
 		BUTTONS,
-		MAIN_MENU,
-		SPLASH
+		SPLASH,
+		MAIN_MENU
 	};
 
 	GPGFX* gpDisplay;
+	GPScreen* gpScreen = nullptr;
+
+	void testMenu();
+
+	std::vector<MenuEntry> mainMenu = {
+		{"Menu 1", std::bind(&DisplayAddon::testMenu, this)},
+		{"Menu 2", std::bind(&DisplayAddon::testMenu, this)},
+		{"Menu 3", std::bind(&DisplayAddon::testMenu, this)},
+		{"Menu 4", std::bind(&DisplayAddon::testMenu, this)},
+	};
+
+	std::vector<MenuEntry>* currentMenu = &mainMenu;
+
+	std::map<DisplayMode, GPScreen*> loadedScreens = {
+		{CONFIG_INSTRUCTION, {new ConfigScreen()}},
+		{SPLASH, {new SplashScreen()}},
+		{MAIN_MENU, {new MainMenuScreen()}},
+		{BUTTONS, {new ButtonLayoutScreen()}},
+	};
 
 	DisplayMode getDisplayMode();
+	DisplayMode currDisplayMode = MAIN_MENU;
 	DisplayMode prevDisplayMode;
 	uint16_t prevButtonState;
 	bool isFocusModeEnabled;

@@ -1,17 +1,42 @@
 add_library(GPGFX 
-    GPGFX.cpp
-    GPGFX_UI.cpp
     drivers/obd_ssd1306.cpp
     drivers/tiny_ssd1306.cpp
+
+    ui/elements/GPWidget.cpp
+    ui/elements/GPButton.cpp
+    ui/elements/GPLever.cpp
+    ui/elements/GPLabel.cpp
+    ui/elements/GPScreen.cpp
+    ui/elements/GPSprite.cpp
+
+    ui/screens/ButtonLayoutScreen.cpp
+    ui/screens/ConfigScreen.cpp
+    ui/screens/MainMenuScreen.cpp
+    ui/screens/SplashScreen.cpp
+
+    GPGFX.cpp
+    GPGFX_UI.cpp
 )
 target_link_libraries(GPGFX PUBLIC 
     pico_stdlib 
+    tinyusb_host
     PicoPeripherals
     OneBitDisplay
+    nanopb
 )
-target_include_directories(GPGFX INTERFACE . drivers)
-target_include_directories(GPGFX PUBLIC 
+target_include_directories(GPGFX PUBLIC
+    ${PROTO_OUTPUT_DIR} 
+    ${CMAKE_SOURCE_DIR}/headers
+    ${CMAKE_SOURCE_DIR}/headers/gamepad
+    ${CMAKE_SOURCE_DIR}/headers/gamepad/descriptors
+    ${CMAKE_SOURCE_DIR}/lib/TinyUSB_Gamepad/src
+    ${CMAKE_SOURCE_DIR}/lib/TinyUSB_Gamepad/src/xid_driver
+    ${CMAKE_SOURCE_DIR}/configs/${GP2040_BOARDCONFIG}
+    ${PROTO_OUTPUT_DIR} 
+    ${CMAKE_BINARY_DIR}/headers
     . 
+    ui
+    ui/elements
+    ui/screens
     drivers
-    PicoPeripherals
 )

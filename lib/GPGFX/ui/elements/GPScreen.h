@@ -1,0 +1,16 @@
+#ifndef _GPSCREEN_H_
+#define _GPSCREEN_H_
+
+#include <cstring>
+#include "GPWidget.h"
+
+class GPScreen : public GPWidget {
+    public:
+        void draw();
+        std::string header = "";
+        std::string footer = "";
+    protected:
+        virtual void drawScreen() = 0;
+};
+
+#endif
