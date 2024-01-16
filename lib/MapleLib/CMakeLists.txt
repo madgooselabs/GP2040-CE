@@ -4,8 +4,12 @@ add_library(${lib_name} )
 
 pico_generate_pio_header(${lib_name} ${lib_src}/maple.pio)
 
-target_sources(${lib_name} PRIVATE ${lib_src}/maple.c ${lib_src}/state_machine.c ${lib_src}/format.c ${lib_src}/display.c ${lib_src}/sh8601.c ${lib_src}/ssd1331.c ${lib_src}/ssd1306.c ${lib_src}/st7789.c ${lib_src}/font.c ${lib_src}/menu.c)
+target_sources(${lib_name} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/maplelib.cpp ${lib_src}/state_machine.c ${lib_src}/format.c ${lib_src}/menu.c)
 
+target_include_directories(${lib_name} PUBLIC
+        .
+        ${lib_src}
+)
 
 target_link_libraries(${lib_name} PRIVATE
         pico_stdlib
