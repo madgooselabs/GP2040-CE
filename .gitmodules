@@ -4,3 +4,6 @@
 [submodule "lib/tinyusb"]
 	path = lib/tinyusb
 	url = https://github.com/hathach/tinyusb/
+[submodule "lib/MapleLib/MaplePad"]
+	path = lib/MapleLib/MaplePad
+	url = https://github.com/mackieks/MaplePad
