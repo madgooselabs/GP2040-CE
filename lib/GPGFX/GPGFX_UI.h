@@ -26,6 +26,9 @@ class GPGFX_UI {
         DisplayOptions getDisplayOptions() { return _displayOptions; }
         void setDisplayOptions(DisplayOptions options) { _displayOptions = options; }
 
+        bool getConfigMode() { return _configMode; }
+        void setConfigMode(bool isConfigMode) { _configMode = isConfigMode; }
+
 	    inline bool __attribute__((always_inline)) pressedButton(const uint16_t mask) { return (_gamepadState.buttons & mask) == mask; }
         inline bool __attribute__((always_inline)) pressedDpad(const uint8_t mask) { return (_gamepadState.dpad & mask) == mask; }
         inline bool __attribute__((always_inline)) pressedUp()    { return pressedDpad(GAMEPAD_MASK_UP); }
@@ -51,6 +54,7 @@ class GPGFX_UI {
     private:
         GPGFX* _renderer;
         DisplayOptions _displayOptions;
+        bool _configMode;
 };
 
 #endif

@@ -8,9 +8,6 @@
 #include "ui/elements/GPScreen.h"
 #include "ui/elements/GPSprite.h"
 
-#include "ui/screens/ButtonLayoutScreen.h"
-#include "ui/screens/ConfigScreen.h"
-#include "ui/screens/MainMenuScreen.h"
-#include "ui/screens/SplashScreen.h"
+#include "GPGFX_UI_screens.h"
 
 #endif

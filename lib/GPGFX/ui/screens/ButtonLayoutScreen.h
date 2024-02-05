@@ -7,6 +7,7 @@ class ButtonLayoutScreen : public GPScreen {
     public:
         ButtonLayoutScreen() {}
         ButtonLayoutScreen(GPGFX* renderer) { setRenderer(renderer); }
+        int8_t update();
     protected:
         void drawScreen();
     private:
@@ -46,6 +47,8 @@ class ButtonLayoutScreen : public GPScreen {
         void drawFightboardStick(int startX, int startY, int buttonRadius, int buttonPadding);
         void drawFightboardStickMirrored(int startX, int startY, int buttonRadius, int buttonPadding);
         bool isInputHistoryEnabled = false;
+
+        uint16_t prevButtonState = 0;
 };
 
 #endif

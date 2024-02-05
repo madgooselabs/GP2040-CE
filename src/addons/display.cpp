@@ -22,7 +22,7 @@ void DisplayAddon::setup() {
 	const DisplayOptions& options = Storage::getInstance().getDisplayOptions();
 	PeripheralI2C* i2c = PeripheralManager::getInstance().getI2C(options.i2cBlock);
 
-	stdio_init_all();
+	//stdio_init_all();
 
 	gpDisplay = new GPGFX();
 
@@ -46,7 +46,6 @@ void DisplayAddon::setup() {
 	for (screenIterator = loadedScreens.begin(); screenIterator != loadedScreens.end(); screenIterator++) {
 		screenIterator->second->setRenderer(gpDisplay);
 	}
-	((MainMenuScreen*)loadedScreens[DisplayAddon::DisplayMode::MAIN_MENU])->setMenu(currentMenu);
 
 	gamepad = Storage::getInstance().GetGamepad();
 	pGamepad = Storage::getInstance().GetProcessedGamepad();
@@ -54,7 +53,6 @@ void DisplayAddon::setup() {
 	const FocusModeOptions& focusModeOptions = Storage::getInstance().getAddonOptions().focusModeOptions;
 	isFocusModeEnabled = focusModeOptions.enabled && focusModeOptions.oledLockEnabled &&
 		isValidPin(focusModeOptions.pin);
-	prevButtonState = 0;
 	displaySaverTimer = options.displaySaverTimeout;
 	displaySaverTimeout = displaySaverTimer;
 	configMode = Storage::getInstance().GetConfigMode();
@@ -62,6 +60,17 @@ void DisplayAddon::setup() {
 
 	const InputHistoryOptions& inputHistoryOptions = Storage::getInstance().getAddonOptions().inputHistoryOptions;
 	isInputHistoryEnabled = inputHistoryOptions.enabled;
+
+    // set current display mode
+    if (!configMode) {
+        if (Storage::getInstance().getDisplayOptions().splashMode != static_cast<SplashMode>(SPLASH_MODE_NONE)) {
+            currDisplayMode = DisplayMode::SPLASH;
+        } else {
+            currDisplayMode = DisplayMode::BUTTONS;
+        }
+    } else {
+        currDisplayMode = DisplayMode::CONFIG_INSTRUCTION;
+    }
 }
 
 bool DisplayAddon::isDisplayPowerOff()
@@ -111,60 +120,45 @@ void DisplayAddon::setDisplayPower(uint8_t status)
 }
 
 void DisplayAddon::process() {
-	if (!configMode && isDisplayPowerOff()) return;
+    const DisplayOptions& options = Storage::getInstance().getDisplayOptions();
 
-	gpScreen = loadedScreens.find(getDisplayMode())->second;
-	gpScreen->setDisplayOptions(Storage::getInstance().getDisplayOptions());
+    if (!configMode && isDisplayPowerOff()) return;
 
-	drawStatusBar(gamepad);
-	gpScreen->setGamepadState(pGamepad->state);
+    gpScreen = loadedScreens.find(currDisplayMode)->second;
+    if (configMode) {
+        gpScreen->setDisplayOptions(Storage::getInstance().getPreviewDisplayOptions());
+    } else {
+        gpScreen->setDisplayOptions(options);
+    }
 
-	if(isInputHistoryEnabled && inputHistoryAddon != nullptr) {
-		//inputHistoryAddon->drawHistory(gpDisplay);
-		gpScreen->footer = inputHistoryAddon->getHistory().c_str();
-	}
+    drawStatusBar(gamepad);
+    gpScreen->setConfigMode(configMode);
+    gpScreen->setGamepadState(gamepad->state);
 
-	gpScreen->draw();
-}
+    if(isInputHistoryEnabled && inputHistoryAddon != nullptr) {
+        //inputHistoryAddon->drawHistory(gpDisplay);
+        gpScreen->footer = inputHistoryAddon->getHistory().c_str();
+    }
 
-void DisplayAddon::testMenu() {
-	currDisplayMode = DisplayAddon::DisplayMode::BUTTONS;
-}
+    int8_t screenReturn = gpScreen->update();
 
-DisplayAddon::DisplayMode DisplayAddon::getDisplayMode() {
-	if (configMode) {
-		gamepad->read();
-		uint16_t buttonState = gamepad->state.buttons;
-		if (prevButtonState && !buttonState) { // has button been pressed (held and released)?
-			switch (prevButtonState) {
-				case (GAMEPAD_MASK_B1):
-					prevDisplayMode =
-						prevDisplayMode == DisplayAddon::DisplayMode::BUTTONS ?
-							DisplayAddon::DisplayMode::CONFIG_INSTRUCTION : DisplayAddon::DisplayMode::BUTTONS;
-						break;
-				case (GAMEPAD_MASK_B2):
-					prevDisplayMode =
-						prevDisplayMode == DisplayAddon::DisplayMode::SPLASH ?
-							DisplayAddon::DisplayMode::CONFIG_INSTRUCTION : DisplayAddon::DisplayMode::SPLASH;
-					break;
-				default:
-					prevDisplayMode = DisplayAddon::DisplayMode::CONFIG_INSTRUCTION;
-			}
-		}
-		prevButtonState = buttonState;
-		return prevDisplayMode;
-	} else {
-		if (Storage::getInstance().getDisplayOptions().splashMode != static_cast<SplashMode>(SPLASH_MODE_NONE)) {
-			uint32_t splashDuration = getDisplayOptions().splashDuration;
-			if (splashDuration == 0 || getMillis() < splashDuration) {
-				return DisplayAddon::DisplayMode::SPLASH;
-			}
-		}
-	}
+    gpScreen->draw();
 
-	//return DisplayAddon::DisplayMode::BUTTONS;
-	//return DisplayAddon::DisplayMode::MAIN_MENU;
-	return currDisplayMode;
+    if (screenReturn >= 0) {
+        if (screenReturn != currDisplayMode) {
+            // screen changes
+            currDisplayMode = (DisplayMode)screenReturn;
+        } else {
+            // no change
+        }
+    } else {
+        // screen exited
+        if (!configMode) {
+            currDisplayMode = DisplayMode::BUTTONS;
+        } else {
+            currDisplayMode = DisplayMode::CONFIG_INSTRUCTION;
+        }
+    }
 }
 
 const DisplayOptions& DisplayAddon::getDisplayOptions() {
@@ -223,7 +217,6 @@ void DisplayAddon::drawStatusBar(Gamepad * gamepad)
 	}
 	switch (gamepad->getOptions().dpadMode)
 	{
-
 		case DPAD_MODE_DIGITAL:      statusBar += " D"; break;
 		case DPAD_MODE_LEFT_ANALOG:  statusBar += " L"; break;
 		case DPAD_MODE_RIGHT_ANALOG: statusBar += " R"; break;

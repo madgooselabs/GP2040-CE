@@ -8,8 +8,11 @@ class SplashScreen : public GPScreen {
     public:
         SplashScreen() {}
         SplashScreen(GPGFX* renderer) { setRenderer(renderer); }
+        int8_t update();
     protected:
         void drawScreen();
+
+        uint16_t prevButtonState = 0;
 };
 
 #endif

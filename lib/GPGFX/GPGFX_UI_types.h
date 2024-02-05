@@ -7,6 +7,7 @@
 
 typedef struct {
     std::string label;
+    uint8_t* icon;
     std::function<void()> action;
 } MenuEntry;
 

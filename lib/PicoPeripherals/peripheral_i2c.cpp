@@ -33,6 +33,9 @@ void PeripheralI2C::setup() {
 
     gpio_pull_up(_SDA);
     gpio_pull_up(_SCL);
+
+    // reset the bus before using it
+    clear();
 }
 
 int16_t PeripheralI2C::read(uint8_t address, uint8_t *data, uint16_t len, bool isBlock) {
@@ -76,4 +79,9 @@ uint8_t PeripheralI2C::test(uint8_t address) {
     uint8_t data;
     int16_t ret = i2c_read_blocking(_I2C, address, &data, 1, false);
     return (ret >= 0);
+}
+
+void PeripheralI2C::clear() {
+    // reset the bus
+    test(0xFF);
 }

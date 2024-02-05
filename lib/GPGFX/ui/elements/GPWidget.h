@@ -9,6 +9,7 @@ class GPWidget : public GPGFX_UI {
         GPWidget() {}
         GPWidget(GPGFX* renderer) { setRenderer(renderer); }
         virtual void draw() {}
+        virtual int8_t update() { return 0; }
 };
 
 #endif

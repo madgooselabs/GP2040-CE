@@ -12,6 +12,7 @@
 #include "GPGFX.h"
 #include "GPGFX_UI.h"
 #include "GPGFX_UI_types.h"
+#include "GPGFX_UI_screens.h"
 #include "GPGFX_UI_widgets.h"
 #include "BoardConfig.h"
 #include "gpaddon.h"
@@ -191,38 +192,17 @@ private:
 	Gamepad* pGamepad;
 	bool configMode;
 
-	enum DisplayMode {
-		CONFIG_INSTRUCTION,
-		BUTTONS,
-		SPLASH,
-		MAIN_MENU
-	};
-
 	GPGFX* gpDisplay;
-	GPScreen* gpScreen = nullptr;
-
-	void testMenu();
-
-	std::vector<MenuEntry> mainMenu = {
-		{"Menu 1", std::bind(&DisplayAddon::testMenu, this)},
-		{"Menu 2", std::bind(&DisplayAddon::testMenu, this)},
-		{"Menu 3", std::bind(&DisplayAddon::testMenu, this)},
-		{"Menu 4", std::bind(&DisplayAddon::testMenu, this)},
-	};
-
-	std::vector<MenuEntry>* currentMenu = &mainMenu;
+	GPScreen* gpScreen;
 
 	std::map<DisplayMode, GPScreen*> loadedScreens = {
 		{CONFIG_INSTRUCTION, {new ConfigScreen()}},
 		{SPLASH, {new SplashScreen()}},
 		{MAIN_MENU, {new MainMenuScreen()}},
-		{BUTTONS, {new ButtonLayoutScreen()}},
+		{BUTTONS, {new ButtonLayoutScreen()}}
 	};
 
-	DisplayMode getDisplayMode();
-	DisplayMode currDisplayMode = MAIN_MENU;
-	DisplayMode prevDisplayMode;
-	uint16_t prevButtonState;
+	DisplayMode currDisplayMode;
 	bool isFocusModeEnabled;
 	bool focusModePrevState;
 	bool turnOffWhenSuspended;

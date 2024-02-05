@@ -9,6 +9,7 @@ class GPScreen : public GPWidget {
         void draw();
         std::string header = "";
         std::string footer = "";
+        virtual int8_t update() { return 0; }
     protected:
         virtual void drawScreen() = 0;
 };

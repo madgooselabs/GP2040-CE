@@ -53,10 +53,10 @@ void GPGFX_TinySSD1306::init(GPGFX_DisplayTypeOptions options) {
 		CommandOps::DISPLAY_ON
 	};
 
-	sendCommands(commands, sizeof(commands));
+    sendCommands(commands, sizeof(commands));
 
-	clear();
-	drawBuffer(NULL);
+    clear();
+    drawBuffer(NULL);
 }
 
 void GPGFX_TinySSD1306::setPower(bool isPowered) {

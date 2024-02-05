@@ -30,3 +30,29 @@ void SplashScreen::drawScreen() {
         }
 	}
 }
+
+int8_t SplashScreen::update() {
+    uint32_t splashDuration = getDisplayOptions().splashDuration;
+    bool configMode = getConfigMode();
+
+    if (!configMode) {
+        // still running
+        if (splashDuration == 0 || getMillis() < splashDuration) {
+            return DisplayMode::SPLASH;
+        }
+        return -1;
+    } else {
+        uint16_t buttonState = _gamepadState.buttons;
+
+        if (prevButtonState && !buttonState) {
+            if (prevButtonState == GAMEPAD_MASK_B2) {
+                prevButtonState = 0;
+                return -1;
+            }
+        }
+
+        prevButtonState = buttonState;
+  
+        return DisplayMode::SPLASH;
+    }
+}

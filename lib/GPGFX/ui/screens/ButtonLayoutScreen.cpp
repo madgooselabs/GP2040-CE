@@ -733,3 +733,24 @@ void ButtonLayoutScreen::drawBlankA(int startX, int startY, int buttonSize, int 
 void ButtonLayoutScreen::drawBlankB(int startX, int startY, int buttonSize, int buttonPadding)
 {
 }
+
+int8_t ButtonLayoutScreen::update() {
+    bool configMode = getConfigMode();
+
+    if (!configMode) {
+        return DisplayMode::BUTTONS;
+    } else {
+        uint16_t buttonState = _gamepadState.buttons;
+
+        if (prevButtonState && !buttonState) {
+            if (prevButtonState == GAMEPAD_MASK_B1) {
+                prevButtonState = 0;
+                return -1;
+            }
+        }
+
+        prevButtonState = buttonState;
+  
+        return DisplayMode::BUTTONS;
+    }
+}
