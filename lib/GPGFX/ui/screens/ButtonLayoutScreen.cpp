@@ -35,7 +35,8 @@ void ButtonLayoutScreen::drawScreen() {
             drawBlankA(0, 0, 0, 0);
             break;
         case BUTTON_LAYOUT_VLXA:
-            drawVLXA(7, (isInputHistoryEnabled ? 22 : 28), 7, 2);
+            //drawVLXA(7, (isInputHistoryEnabled ? 22 : 28), 7, 2);
+            //drawVLXA(14, 36, 10, 2);
             break;
         case BUTTON_LAYOUT_CUSTOMA:
             drawButtonLayoutLeft(buttonLayoutCustomOptions.paramsLeft);
@@ -95,7 +96,7 @@ void ButtonLayoutScreen::drawScreen() {
             drawSticklessButtons(0, 0, 0, 0);
             break;
         case BUTTON_LAYOUT_VLXB:
-            drawVLXB(6, (isInputHistoryEnabled ? 22 : 28), 7, 2);
+            //drawVLXB(6, (isInputHistoryEnabled ? 22 : 28), 7, 2);
             break;
         case BUTTON_LAYOUT_CUSTOMB:
             drawButtonLayoutRight(buttonLayoutCustomOptions.paramsRight);
@@ -312,34 +313,36 @@ void ButtonLayoutScreen::drawArcadeStick(int startX, int startY, int buttonRadiu
 
 void ButtonLayoutScreen::drawVLXA(int startX, int startY, int buttonRadius, int buttonPadding)
 {
-	const int buttonMargin = buttonPadding + (buttonRadius * 2);
+    drawLever(startX, startY, buttonRadius, 1, 0, 0);
 
+	//const int buttonMargin = buttonPadding + (buttonRadius * 2);
+    //
 	// Stick
-	getRenderer()->drawEllipse(startX + (buttonMargin / 2), startY + (buttonMargin / 2), buttonRadius * 1.25, buttonRadius * 1.25, 1, 0);
-
-	if (pressedUp()) {
-		if (pressedLeft()) {
-			getRenderer()->drawEllipse(startX + (buttonMargin / 5), startY + (buttonMargin / 5), buttonRadius, buttonRadius, 1, 1);
-		} else if (pressedRight()) {
-			getRenderer()->drawEllipse(startX + (buttonMargin * 0.875), startY + (buttonMargin / 5), buttonRadius, buttonRadius, 1, 1);
-		} else {
-			getRenderer()->drawEllipse(startX + (buttonMargin / 2), startY, buttonRadius, buttonRadius, 1, 1);
-		}
-	} else if (pressedDown()) {
-		if (pressedLeft()) {
-			getRenderer()->drawEllipse(startX + (buttonMargin / 5), startY + (buttonMargin * 0.875), buttonRadius, buttonRadius, 1, 1);
-		} else if (pressedRight()) {
-			getRenderer()->drawEllipse(startX + (buttonMargin * 0.875), startY + (buttonMargin * 0.875), buttonRadius, buttonRadius, 1, 1);
-		} else {
-			getRenderer()->drawEllipse(startX + buttonMargin / 2, startY + buttonMargin, buttonRadius, buttonRadius, 1, 1);
-		}
-	} else if (pressedLeft()) {
-		getRenderer()->drawEllipse(startX, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
-	} else if (pressedRight()) {
-		getRenderer()->drawEllipse(startX + buttonMargin, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
-	} else {
-		getRenderer()->drawEllipse(startX + buttonMargin / 2, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
-	}
+	//getRenderer()->drawEllipse(startX + (buttonMargin / 2), startY + (buttonMargin / 2), buttonRadius * 1.25, buttonRadius * 1.25, 1, 0);
+    //
+	//if (pressedUp()) {
+	//	if (pressedLeft()) {
+	//		getRenderer()->drawEllipse(startX + (buttonMargin / 5), startY + (buttonMargin / 5), buttonRadius, buttonRadius, 1, 1);
+	//	} else if (pressedRight()) {
+	//		getRenderer()->drawEllipse(startX + (buttonMargin * 0.875), startY + (buttonMargin / 5), buttonRadius, buttonRadius, 1, 1);
+	//	} else {
+	//		getRenderer()->drawEllipse(startX + (buttonMargin / 2), startY, buttonRadius, buttonRadius, 1, 1);
+	//	}
+	//} else if (pressedDown()) {
+	//	if (pressedLeft()) {
+	//		getRenderer()->drawEllipse(startX + (buttonMargin / 5), startY + (buttonMargin * 0.875), buttonRadius, buttonRadius, 1, 1);
+	//	} else if (pressedRight()) {
+	//		getRenderer()->drawEllipse(startX + (buttonMargin * 0.875), startY + (buttonMargin * 0.875), buttonRadius, buttonRadius, 1, 1);
+	//	} else {
+	//		getRenderer()->drawEllipse(startX + buttonMargin / 2, startY + buttonMargin, buttonRadius, buttonRadius, 1, 1);
+	//	}
+	//} else if (pressedLeft()) {
+	//	getRenderer()->drawEllipse(startX, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
+	//} else if (pressedRight()) {
+	//	getRenderer()->drawEllipse(startX + buttonMargin, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
+	//} else {
+	//	getRenderer()->drawEllipse(startX + buttonMargin / 2, startY + buttonMargin / 2, buttonRadius, buttonRadius, 1, 1);
+	//}
 }
 
 void ButtonLayoutScreen::drawFightboardMirrored(int startX, int startY, int buttonRadius, int buttonPadding)
@@ -539,20 +542,44 @@ void ButtonLayoutScreen::drawVewlix(int startX, int startY, int buttonRadius, in
 
 void ButtonLayoutScreen::drawVLXB(int startX, int startY, int buttonRadius, int buttonPadding)
 {
-	const int buttonMargin = buttonPadding + (buttonRadius * 2);
+    drawButton(startX-2, startY-2, buttonRadius, 1, 0, GAMEPAD_MASK_B3);
+    drawButton(startX+16, startY-7, buttonRadius, 1, 0, GAMEPAD_MASK_B4);
+    drawButton(startX+32, startY-7, buttonRadius, 1, 0, GAMEPAD_MASK_R1);
+    drawButton(startX+48, startY-7, buttonRadius, 1, 0, GAMEPAD_MASK_L1);
 
-	// 9-button Hori VLX
-	getRenderer()->drawEllipse(startX + (buttonMargin * 2.75), startY + (buttonMargin * 0.2), buttonRadius, buttonRadius, 1, pressedB3());
-	getRenderer()->drawEllipse(startX + (buttonMargin * 3.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pressedB4());
-	getRenderer()->drawEllipse(startX + (buttonMargin * 4.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pressedR1());
-	getRenderer()->drawEllipse(startX + (buttonMargin * 5.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pressedL1());
+    drawButton(startX-5, startY+16, buttonRadius, 1, 0, GAMEPAD_MASK_B1);
+    drawButton(startX+11, startY+9, buttonRadius, 1, 0, GAMEPAD_MASK_B2);
+    drawButton(startX+27, startY+9, buttonRadius, 1, 0, GAMEPAD_MASK_R2);
+    drawButton(startX+43, startY+9, buttonRadius, 1, 0, GAMEPAD_MASK_L2);
+    
+    drawButton(startX+69, startY+2, 6, 1, 0, GAMEPAD_MASK_S2);
 
-	getRenderer()->drawEllipse(startX + (buttonMargin * 2.75) - (buttonMargin / 3), startY + buttonMargin + (buttonMargin * 0.2), buttonRadius, buttonRadius, 1, pressedB1());
-	getRenderer()->drawEllipse(startX + (buttonMargin * 3.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pressedB2());
-	getRenderer()->drawEllipse(startX + (buttonMargin * 4.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pressedR2());
-	getRenderer()->drawEllipse(startX + (buttonMargin * 5.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pressedL2());
+    //X: 50, Y: 31, R: 7
+    //X: 66, Y: 24, R: 7
+    //X: 82, Y: 24, R: 7
+    //X: 98, Y: 24, R: 7
 
-	getRenderer()->drawEllipse(startX + (buttonMargin * 7.4) - (buttonMargin / 3.5), startY + buttonMargin - (buttonMargin / 1.5), buttonRadius *.8, buttonRadius * .8, 1, pressedS2());
+    //X: 45, Y: 47, R: 7
+    //X: 61, Y: 40, R: 7
+    //X: 77, Y: 40, R: 7
+    //X: 93, Y: 40, R: 7
+
+    //X: 119, Y: 33, R: 1
+
+	//const int buttonMargin = buttonPadding + (buttonRadius * 2);
+    //
+	//// 9-button Hori VLX
+	//getRenderer()->drawEllipse(startX + (buttonMargin * 2.75), startY + (buttonMargin * 0.2), buttonRadius, buttonRadius, 1, pressedB3());
+	//getRenderer()->drawEllipse(startX + (buttonMargin * 3.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pressedB4());
+	//getRenderer()->drawEllipse(startX + (buttonMargin * 4.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pressedR1());
+	//getRenderer()->drawEllipse(startX + (buttonMargin * 5.75), startY - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pressedL1());
+    //
+	//getRenderer()->drawEllipse(startX + (buttonMargin * 2.75) - (buttonMargin / 3), startY + buttonMargin + (buttonMargin * 0.2), buttonRadius, buttonRadius, 1, pressedB1());
+	//getRenderer()->drawEllipse(startX + (buttonMargin * 3.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pressedB2());
+	//getRenderer()->drawEllipse(startX + (buttonMargin * 4.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pressedR2());
+	//getRenderer()->drawEllipse(startX + (buttonMargin * 5.75) - (buttonMargin / 3), startY + buttonMargin - (buttonMargin / 4), buttonRadius, buttonRadius, 1, pressedL2());
+    //
+	//getRenderer()->drawEllipse(startX + (buttonMargin * 7.4) - (buttonMargin / 3.5), startY + buttonMargin - (buttonMargin / 1.5), buttonRadius *.8, buttonRadius * .8, 1, pressedS2());
 }
 
 void ButtonLayoutScreen::drawFightboard(int startX, int startY, int buttonRadius, int buttonPadding)
@@ -734,8 +761,40 @@ void ButtonLayoutScreen::drawBlankB(int startX, int startY, int buttonSize, int 
 {
 }
 
+void ButtonLayoutScreen::drawLever(uint16_t startX, uint16_t startY, uint16_t radius, uint16_t strokeColor, uint16_t fillColor, uint16_t inputType) {
+    GPLever* lever = new GPLever();
+    lever->setRenderer(getRenderer());
+    
+    lever->setPosition(startX, startY);
+    lever->setStrokeColor(strokeColor);
+    lever->setRadius(radius);
+    lever->setInputType(inputType);
+
+    addElement(lever);
+}
+
+void ButtonLayoutScreen::drawButton(uint16_t startX, uint16_t startY, uint16_t radius, uint16_t strokeColor, uint16_t fillColor, int16_t inputMask) {
+    GPButton* button = new GPButton();
+    button->setRenderer(getRenderer());
+
+    button->setPosition(startX, startY);
+    button->setStrokeColor(strokeColor);
+    button->setRadius(radius);
+    button->setInputMask(inputMask);
+
+    addElement(button);
+}
+
 int8_t ButtonLayoutScreen::update() {
+    GPWidget::update();
     bool configMode = getConfigMode();
+
+    if (!hasInitialized) {
+        hasInitialized = true;
+        drawVLXA(14, 36, 10, 2);
+
+        drawVLXB(50, 31, 7, 2);
+    }
 
     if (!configMode) {
         return DisplayMode::BUTTONS;

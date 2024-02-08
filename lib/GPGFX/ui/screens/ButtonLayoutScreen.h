@@ -11,6 +11,11 @@ class ButtonLayoutScreen : public GPScreen {
     protected:
         void drawScreen();
     private:
+        // new layout methods
+        void drawLever(uint16_t startX, uint16_t startY, uint16_t radius, uint16_t strokeColor, uint16_t fillColor, uint16_t inputType);
+        void drawButton(uint16_t startX, uint16_t startY, uint16_t radius, uint16_t strokeColor, uint16_t fillColor, int16_t inputMask = -1);
+
+        // old layout methods
         void drawStickless(int startX, int startY, int buttonRadius, int buttonPadding);
         void drawWasdBox(int startX, int startY, int buttonRadius, int buttonPadding);
         void drawArcadeStick(int startX, int startY, int buttonRadius, int buttonPadding);
@@ -47,8 +52,11 @@ class ButtonLayoutScreen : public GPScreen {
         void drawFightboardStick(int startX, int startY, int buttonRadius, int buttonPadding);
         void drawFightboardStickMirrored(int startX, int startY, int buttonRadius, int buttonPadding);
         bool isInputHistoryEnabled = false;
+        bool hasInitialized = false;
 
         uint16_t prevButtonState = 0;
+
+        uint16_t map(uint16_t x, uint16_t in_min, uint16_t in_max, uint16_t out_min, uint16_t out_max);
 };
 
 #endif

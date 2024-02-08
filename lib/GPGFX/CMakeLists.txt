@@ -27,7 +27,7 @@ add_library(GPGFX
     GPGFX_UI.cpp
 )
 target_link_libraries(GPGFX PUBLIC 
-    pico_stdlib 
+    pico_stdlib
     tinyusb_host
     PicoPeripherals
     OneBitDisplay

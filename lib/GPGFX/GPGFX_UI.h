@@ -21,7 +21,7 @@ class GPGFX_UI {
         GPGFX* getRenderer() { return _renderer; }
 
         GamepadState getGamepadState() { return _gamepadState; }
-        void setGamepadState(GamepadState state) { _gamepadState = state; }
+        virtual void setGamepadState(GamepadState state) { _gamepadState = state; }
 
         DisplayOptions getDisplayOptions() { return _displayOptions; }
         void setDisplayOptions(DisplayOptions options) { _displayOptions = options; }
@@ -49,6 +49,8 @@ class GPGFX_UI {
         inline bool __attribute__((always_inline)) pressedR3()    { return pressedButton(GAMEPAD_MASK_R3); }
         inline bool __attribute__((always_inline)) pressedA1()    { return pressedButton(GAMEPAD_MASK_A1); }
         inline bool __attribute__((always_inline)) pressedA2()    { return pressedButton(GAMEPAD_MASK_A2); }
+
+        uint16_t map(uint16_t x, uint16_t in_min, uint16_t in_max, uint16_t out_min, uint16_t out_max);
     protected:
         GamepadState _gamepadState;
     private:
