@@ -187,6 +187,7 @@ src/addons/i2canalog1219.cpp
 src/addons/jslider.cpp
 src/addons/i2cdisplay.cpp
 src/addons/neopicoleds.cpp
+src/addons/pcf8575expander.cpp
 src/addons/playernum.cpp
 src/addons/playerleds.cpp
 src/addons/ps4mode.cpp
@@ -218,6 +219,7 @@ AnimationStation
 CRC32
 FlashPROM
 ADS1219
+PCF8575
 PlayerLEDs
 NeoPico
 OneBitDisplay

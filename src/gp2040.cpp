@@ -26,6 +26,7 @@
 #include "addons/wiiext.h"
 #include "addons/input_macro.h"
 #include "addons/snes_input.h"
+#include "addons/pcf8575expander.h"
 
 // Pico includes
 #include "pico/bootrom.h"
@@ -99,6 +100,7 @@ void GP2040::setup() {
 	addons.LoadAddon(new SliderSOCDInput(), CORE0_INPUT);
 	addons.LoadAddon(new TiltInput(), CORE0_INPUT);
 	addons.LoadAddon(new InputMacro(), CORE0_INPUT);
+	addons.LoadAddon(new PCF8575Expander(), CORE0_INPUT);
 
 	InputMode inputMode = gamepad->getOptions().inputMode;
 	const BootAction bootAction = getBootAction();
