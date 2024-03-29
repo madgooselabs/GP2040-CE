@@ -560,6 +560,110 @@ app.get('/api/getButtonLayoutCustomOptions', (req, res) => {
 	});
 });
 
+app.get('/api/getButtonLayouts', (req, res) => {
+    return res.send({
+        "ledLayout":{
+            "id":0,"indexUp":3,"indexDown":1,"indexLeft":0,"indexRight":2,
+            "indexB1":8,"indexB2":9,"indexB3":4,"indexB4":5,
+            "indexL1":7,"indexR1":6,"indexL2":11,"indexR2":10,
+            "indexS1":-1,"indexS2":-1,"indexL3":-1,"indexR3":-1,
+            "indexA1":-1,"indexA2":-1
+        },
+        "displayLayouts":{
+            // stick
+//            "buttonLayoutId": 0, "buttonLayout": {
+//                "0": {"elementType": 5,"parameters": {"x1": 17,"y1": 37,"x2": 10,"y2": 10,"stroke": 1,"fill": 0,"value": 0,"shape": 0,"angleStart": 0,"angleEnd": 0,"closed": 0}}
+//            },
+            // stickless
+//            "buttonLayoutId":1,"buttonLayout":{
+//                "0":{"elementType":3,"parameters":{"x1":8,"y1":20,"x2":8,"y2":8,"stroke":1,"fill":1,"value":4,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "1":{"elementType":3,"parameters":{"x1":26,"y1":20,"x2":8,"y2":8,"stroke":1,"fill":1,"value":2,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "2":{"elementType":3,"parameters":{"x1":41,"y1":29,"x2":8,"y2":8,"stroke":1,"fill":1,"value":8,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "3":{"elementType":3,"parameters":{"x1":48,"y1":53,"x2":8,"y2":8,"stroke":1,"fill":1,"value":1,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}}
+//            },
+            // keyboard
+            "buttonLayoutId": 5, "buttonLayout": {
+                "0": {"elementType": 3,"parameters": {"x1": 8,"y1": 39,"x2": 18,"y2": 49,"stroke": 1,"fill": 1,"value": 4,"shape": 1,"angleStart": 0,"angleEnd": 0,"closed": 0}},
+                "1": {"elementType": 3,"parameters": {"x1": 19,"y1": 39,"x2": 29,"y2": 49,"stroke": 1,"fill": 1,"value": 2,"shape": 1,"angleStart": 0,"angleEnd": 0,"closed": 0}},
+                "2": {"elementType": 3,"parameters": {"x1": 19,"y1": 28,"x2": 29,"y2": 38,"stroke": 1,"fill": 1,"value": 1,"shape": 1,"angleStart": 0,"angleEnd": 0,"closed": 0}},
+                "3": {"elementType": 3,"parameters": {"x1": 30,"y1": 39,"x2": 40,"y2": 49,"stroke": 1,"fill": 1,"value": 8,"shape": 1,"angleStart": 0,"angleEnd": 0,"closed": 0}}
+            },
+            // keyboard angled
+//            "buttonLayoutId": 4,
+//            "buttonLayout": {
+//                "0": {"elementType": 3,"parameters": {"x1": 8,"y1": 37,"x2": 7,"y2": 7,"stroke": 1,"fill": 1,"value": 4,"shape": 2,"angleStart": 0,"angleEnd": 0,"closed": 0}},
+//                "1": {"elementType": 3,"parameters": {"x1": 23,"y1": 24,"x2": 7,"y2": 7,"stroke": 1,"fill": 1,"value": 1,"shape": 2,"angleStart": 0,"angleEnd": 0,"closed": 0}},
+//                "2": {"elementType": 3,"parameters": {"x1": 23,"y1": 50,"x2": 7,"y2": 7,"stroke": 1,"fill": 1,"value": 2,"shape": 2,"angleStart": 0,"angleEnd": 0,"closed": 0}},
+//                "3": {"elementType": 3,"parameters": {"x1": 37,"y1": 37,"x2": 7,"y2": 7,"stroke": 1,"fill": 1,"value": 8,"shape": 2,"angleStart": 0,"angleEnd": 0,"closed": 0}}
+//            },
+            // taiko
+//            "buttonLayoutId": 21, "buttonLayout": {
+//                "0": {"elementType": 2,"parameters": {"x1": 60,"y1": 32,"x2": 22,"y2": 22,"stroke": 1,"fill": 2,"value": 4,"shape": 4,"angleStart": 90,"angleEnd": 270,"closed": 1}},
+//                "1": {"elementType": 2,"parameters": {"x1": 60,"y1": 32,"x2": 18,"y2": 18,"stroke": 1,"fill": 1,"value": 1,"shape": 4,"angleStart": 90,"angleEnd": 270,"closed": 1}}
+//            },
+            // turntable
+//            "buttonLayoutId": 22, "buttonLayout": {
+//                "0": {"elementType": 8,"parameters": {"x1": 29,"y1": 34,"x2": 18,"y2": 18,"stroke": 1,"fill": 0,"value": 0,"shape": 0,"angleStart": 0,"angleEnd": 0,"closed": 0}},
+//                "1": {"elementType": 8,"parameters": {"x1": 29,"y1": 34,"x2": 2,"y2": 2,"stroke": 1,"fill": 0,"value": 0,"shape": 0,"angleStart": 0,"angleEnd": 0,"closed": 0}},
+//                "2": {"elementType": 3,"parameters": {"x1": 19,"y1": 31,"x2": 4,"y2": 3,"stroke": 1,"fill": 1,"value": 1,"shape": 3,"angleStart": 13,"angleEnd": 0,"closed": 0}},
+//                "3": {"elementType": 3,"parameters": {"x1": 19,"y1": 37,"x2": 4,"y2": 3,"stroke": 1,"fill": 1,"value": 2,"shape": 3,"angleStart": 10,"angleEnd": 0,"closed": 0}},
+//                "4": {"elementType": 3,"parameters": {"x1": 37,"y1": 31,"x2": 4,"y2": 3,"stroke": 1,"fill": 1,"value": 2,"shape": 3,"angleStart": 13,"angleEnd": 0,"closed": 0}},
+//                "5": {"elementType": 3,"parameters": {"x1": 37,"y1": 37,"x2": 4,"y2": 3,"stroke": 1,"fill": 1,"value": 1,"shape": 3,"angleStart": 10,"angleEnd": 0,"closed": 0}}
+//            },
+            // solo
+//            "buttonLayoutId": 18, "buttonLayout": {
+//                "0": {"elementType": 2,"parameters": {"x1": 39,"y1": 12,"x2": 54,"y2": 27,"stroke": 1,"fill": 1,"value": 2,"shape": 1,"angleStart": 0,"angleEnd": 0,"closed": 0}},
+//                "1": {"elementType": 3,"parameters": {"x1": 39,"y1": 29,"x2": 54,"y2": 44,"stroke": 1,"fill": 1,"value": 4,"shape": 1,"angleStart": 0,"angleEnd": 0,"closed": 0}},
+//                "2": {"elementType": 3,"parameters": {"x1": 56,"y1": 46,"x2": 71,"y2": 61,"stroke": 1,"fill": 1,"value": 2,"shape": 1,"angleStart": 0,"angleEnd": 0,"closed": 0}},
+//                "3": {"elementType": 3,"parameters": {"x1": 56,"y1": 12,"x2": 71,"y2": 27,"stroke": 1,"fill": 1,"value": 1,"shape": 1,"angleStart": 0,"angleEnd": 0,"closed": 0}},
+//                "4": {"elementType": 3,"parameters": {"x1": 73,"y1": 29,"x2": 88,"y2": 44,"stroke": 1,"fill": 1,"value": 8,"shape": 1,"angleStart": 0,"angleEnd": 0,"closed": 0}},
+//                "5": {"elementType": 2,"parameters": {"x1": 73,"y1": 12,"x2": 88,"y2": 27,"stroke": 1,"fill": 1,"value": 1,"shape": 1,"angleStart": 0,"angleEnd": 0,"closed": 0}}
+//            },
+            // stickless
+            "buttonLayoutRightId":1,"buttonLayoutRight":{
+                "0":{"elementType":2,"parameters":{"x1":57,"y1":20,"x2":8,"y2":8,"stroke":1,"fill":1,"value":4,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+                "1":{"elementType":2,"parameters":{"x1":75,"y1":16,"x2":8,"y2":8,"stroke":1,"fill":1,"value":8,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+                "2":{"elementType":2,"parameters":{"x1":93,"y1":16,"x2":8,"y2":8,"stroke":1,"fill":1,"value":32,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+                "3":{"elementType":2,"parameters":{"x1":111,"y1":20,"x2":8,"y2":8,"stroke":1,"fill":1,"value":16,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+                "4":{"elementType":2,"parameters":{"x1":57,"y1":38,"x2":8,"y2":8,"stroke":1,"fill":1,"value":1,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+                "5":{"elementType":2,"parameters":{"x1":75,"y1":34,"x2":8,"y2":8,"stroke":1,"fill":1,"value":2,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+                "6":{"elementType":2,"parameters":{"x1":93,"y1":34,"x2":8,"y2":8,"stroke":1,"fill":1,"value":128,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+                "7":{"elementType":2,"parameters":{"x1":111,"y1":38,"x2":8,"y2":8,"stroke":1,"fill":1,"value":64,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}}
+            }
+        }
+    });
+});
+
+app.get('/api/getButtonLayoutDefs', (req, res) => {
+    return res.send({
+        "buttonLayout":{
+            "BUTTON_LAYOUT_STICK":0,"BUTTON_LAYOUT_STICKLESS":1,"BUTTON_LAYOUT_BUTTONS_ANGLED":2,
+            "BUTTON_LAYOUT_BUTTONS_BASIC":3,"BUTTON_LAYOUT_KEYBOARD_ANGLED":4,"BUTTON_LAYOUT_KEYBOARDA":5,
+            "BUTTON_LAYOUT_DANCEPADA":6,"BUTTON_LAYOUT_TWINSTICKA":7,"BUTTON_LAYOUT_BLANKA":8,
+            "BUTTON_LAYOUT_VLXA":9,"BUTTON_LAYOUT_FIGHTBOARD_STICK":10,"BUTTON_LAYOUT_FIGHTBOARD_MIRRORED":11,
+            "BUTTON_LAYOUT_CUSTOMA":12,"BUTTON_LAYOUT_OPENCORE0WASDA":13,"BUTTON_LAYOUT_STICKLESS_13":14,
+            "BUTTON_LAYOUT_STICKLESS_16":15,"BUTTON_LAYOUT_STICKLESS_14":16,"BUTTON_LAYOUT_DANCEPAD_DDR_LEFT":17,
+            "BUTTON_LAYOUT_DANCEPAD_DDR_SOLO":18,"BUTTON_LAYOUT_DANCEPAD_PIU_LEFT":19,"BUTTON_LAYOUT_POPN_A":20,
+            "BUTTON_LAYOUT_TAIKO_A":21,"BUTTON_LAYOUT_BM_TURNTABLE_A":22,"BUTTON_LAYOUT_BM_5KEY_A":23,
+            "BUTTON_LAYOUT_BM_7KEY_A":24,"BUTTON_LAYOUT_GITADORA_FRET_A":25,"BUTTON_LAYOUT_GITADORA_STRUM_A":26,
+            "BUTTON_LAYOUT_BOARD_DEFINED_A":27
+        },
+        "buttonLayoutRight":{
+            "BUTTON_LAYOUT_ARCADE":0,"BUTTON_LAYOUT_STICKLESSB":1,"BUTTON_LAYOUT_BUTTONS_ANGLEDB":2,
+            "BUTTON_LAYOUT_VEWLIX":3,"BUTTON_LAYOUT_VEWLIX7":4,"BUTTON_LAYOUT_CAPCOM":5,
+            "BUTTON_LAYOUT_CAPCOM6":6,"BUTTON_LAYOUT_SEGA2P":7,"BUTTON_LAYOUT_NOIR8":8,
+            "BUTTON_LAYOUT_KEYBOARDB":9,"BUTTON_LAYOUT_DANCEPADB":10,"BUTTON_LAYOUT_TWINSTICKB":11,
+            "BUTTON_LAYOUT_BLANKB":12,"BUTTON_LAYOUT_VLXB":13,"BUTTON_LAYOUT_FIGHTBOARD":14,
+            "BUTTON_LAYOUT_FIGHTBOARD_STICK_MIRRORED":15,"BUTTON_LAYOUT_CUSTOMB":16,
+            "BUTTON_LAYOUT_KEYBOARD8B":17,"BUTTON_LAYOUT_OPENCORE0WASDB":18,"BUTTON_LAYOUT_STICKLESS_13B":19,
+            "BUTTON_LAYOUT_STICKLESS_16B":20,"BUTTON_LAYOUT_STICKLESS_14B":21,"BUTTON_LAYOUT_DANCEPAD_DDR_RIGHT":22,
+            "BUTTON_LAYOUT_DANCEPAD_PIU_RIGHT":23,"BUTTON_LAYOUT_POPN_B":24,"BUTTON_LAYOUT_TAIKO_B":25,
+            "BUTTON_LAYOUT_BM_TURNTABLE_B":26,"BUTTON_LAYOUT_BM_5KEY_B":27,"BUTTON_LAYOUT_BM_7KEY_B":28,
+            "BUTTON_LAYOUT_GITADORA_FRET_B":29,"BUTTON_LAYOUT_GITADORA_STRUM_B":30,"BUTTON_LAYOUT_BOARD_DEFINED_B":31
+        }
+    });
+});
+
 app.get('/api/reboot', (req, res) => {
 	return res.send({});
 });

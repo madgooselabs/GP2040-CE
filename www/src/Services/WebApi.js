@@ -368,6 +368,34 @@ async function setCustomTheme(customThemeOptions) {
 		});
 }
 
+async function getButtonLayouts(setLoading) {
+	setLoading(true);
+
+	try {
+		const response = await axios.get(`${baseUrl}/api/getButtonLayouts`);
+		setLoading(false);
+
+		return response.data;
+	} catch (error) {
+		setLoading(false);
+		console.error(error);
+	}
+}
+
+async function getButtonLayoutDefs(setLoading) {
+	setLoading(true);
+
+	try {
+		const response = await axios.get(`${baseUrl}/api/getButtonLayoutDefs`);
+		setLoading(false);
+
+		return response.data;
+	} catch (error) {
+		setLoading(false);
+		console.error(error);
+	}
+}
+
 async function getPinMappings() {
 	try {
 		const { data } = await axios.get(`${baseUrl}/api/getPinMappings`);
@@ -667,6 +695,8 @@ const WebApi = {
 	setWiiControls,
 	getPeripheralOptions,
 	setPeripheralOptions,
+    getButtonLayouts,
+    getButtonLayoutDefs,
 	getSplashImage,
 	setSplashImage,
 	getFirmwareVersion,
