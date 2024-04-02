@@ -571,9 +571,9 @@ app.get('/api/getButtonLayouts', (req, res) => {
         },
         "displayLayouts":{
             // stick
-//            "buttonLayoutId": 0, "buttonLayout": {
-//                "0": {"elementType": 5,"parameters": {"x1": 17,"y1": 37,"x2": 10,"y2": 10,"stroke": 1,"fill": 0,"value": 0,"shape": 0,"angleStart": 0,"angleEnd": 0,"closed": 0}}
-//            },
+            "buttonLayoutId": 0, "buttonLayout": {
+                "0": {"elementType": 5,"parameters": {"x1": 17,"y1": 37,"x2": 10,"y2": 10,"stroke": 1,"fill": 0,"value": 0,"shape": 0,"angleStart": 0,"angleEnd": 0,"closed": 0}}
+            },
             // stickless
 //            "buttonLayoutId":1,"buttonLayout":{
 //                "0":{"elementType":3,"parameters":{"x1":8,"y1":20,"x2":8,"y2":8,"stroke":1,"fill":1,"value":4,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
@@ -582,12 +582,12 @@ app.get('/api/getButtonLayouts', (req, res) => {
 //                "3":{"elementType":3,"parameters":{"x1":48,"y1":53,"x2":8,"y2":8,"stroke":1,"fill":1,"value":1,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}}
 //            },
             // keyboard
-            "buttonLayoutId": 5, "buttonLayout": {
-                "0": {"elementType": 3,"parameters": {"x1": 8,"y1": 39,"x2": 18,"y2": 49,"stroke": 1,"fill": 1,"value": 4,"shape": 1,"angleStart": 0,"angleEnd": 0,"closed": 0}},
-                "1": {"elementType": 3,"parameters": {"x1": 19,"y1": 39,"x2": 29,"y2": 49,"stroke": 1,"fill": 1,"value": 2,"shape": 1,"angleStart": 0,"angleEnd": 0,"closed": 0}},
-                "2": {"elementType": 3,"parameters": {"x1": 19,"y1": 28,"x2": 29,"y2": 38,"stroke": 1,"fill": 1,"value": 1,"shape": 1,"angleStart": 0,"angleEnd": 0,"closed": 0}},
-                "3": {"elementType": 3,"parameters": {"x1": 30,"y1": 39,"x2": 40,"y2": 49,"stroke": 1,"fill": 1,"value": 8,"shape": 1,"angleStart": 0,"angleEnd": 0,"closed": 0}}
-            },
+//            "buttonLayoutId": 5, "buttonLayout": {
+//                "0": {"elementType": 3,"parameters": {"x1": 8,"y1": 39,"x2": 18,"y2": 49,"stroke": 1,"fill": 1,"value": 4,"shape": 1,"angleStart": 0,"angleEnd": 0,"closed": 0}},
+//                "1": {"elementType": 3,"parameters": {"x1": 19,"y1": 39,"x2": 29,"y2": 49,"stroke": 1,"fill": 1,"value": 2,"shape": 1,"angleStart": 0,"angleEnd": 0,"closed": 0}},
+//                "2": {"elementType": 3,"parameters": {"x1": 19,"y1": 28,"x2": 29,"y2": 38,"stroke": 1,"fill": 1,"value": 1,"shape": 1,"angleStart": 0,"angleEnd": 0,"closed": 0}},
+//                "3": {"elementType": 3,"parameters": {"x1": 30,"y1": 39,"x2": 40,"y2": 49,"stroke": 1,"fill": 1,"value": 8,"shape": 1,"angleStart": 0,"angleEnd": 0,"closed": 0}}
+//            },
             // keyboard angled
 //            "buttonLayoutId": 4,
 //            "buttonLayout": {

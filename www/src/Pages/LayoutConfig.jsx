@@ -19,7 +19,7 @@ import {
 } from '../Data/Buttons';
 import LEDColors from '../Data/LEDColors';
 
-import './CustomThemePage.scss';
+import './LayoutConfig.scss';
 
 let layoutFieldsSchema = {};
 
@@ -255,7 +255,7 @@ export default function LayoutConfigPage() {
                                 </div>
                                 <div className="d-flex led-preview-container">
                                     <div
-                                        className={`led-preview`}
+                                        className="led-preview"
                                         onContextMenu={(e) => e.preventDefault()}
                                     >
                                         <div className="container-aux">
@@ -303,6 +303,9 @@ export default function LayoutConfigPage() {
                                                 />
                                             )) : ''}
                                         </div>
+                                    </div>
+                                    <div className="layout-properties">
+
                                     </div>
                                 </div>
                             </Section>
