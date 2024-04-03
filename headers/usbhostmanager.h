@@ -36,6 +36,10 @@ public:
     void xinput_umount_cb(uint8_t dev_addr);
     void xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len);
     void xinput_report_sent_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len);
+    void midi_mount_cb(uint8_t dev_addr, uint8_t in_ep, uint8_t out_ep, uint8_t num_cables_rx, uint16_t num_cables_tx);
+    void midi_umount_cb(uint8_t dev_addr, uint8_t instance);
+    void midi_rx_cb(uint8_t dev_addr, uint32_t num_packets);
+    void midi_tx_cb(uint8_t dev_addr);
     
 private:
     USBHostManager() : tuh_ready(false), core0Ready(false), core1Ready(false) {}

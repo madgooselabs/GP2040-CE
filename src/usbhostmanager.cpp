@@ -9,6 +9,7 @@
 #include "host/usbh_pvt.h"
 
 #include "drivers/shared/xinput_host.h"
+#include "usb_midi_host.h"
 
 void USBHostManager::start() {
     // This will happen after Gamepad has initialized
@@ -101,6 +102,35 @@ void USBHostManager::xinput_report_sent_cb(uint8_t dev_addr, uint8_t instance, u
         (*it)->report_sent(dev_addr, instance, report, len);
     }
 }
+
+void USBHostManager::midi_mount_cb(uint8_t dev_addr, uint8_t in_ep, uint8_t out_ep, uint8_t num_cables_rx, uint16_t num_cables_tx) {
+    if ( listeners.size() == 0 ) return;
+    for( std::vector<USBListener*>::iterator it = listeners.begin(); it != listeners.end(); it++ ){
+        (*it)->midi_mount(dev_addr, in_ep, out_ep, num_cables_rx, num_cables_tx);
+    }
+}
+
+void USBHostManager::midi_umount_cb(uint8_t dev_addr, uint8_t instance) {
+    if ( listeners.size() == 0 ) return;
+    for( std::vector<USBListener*>::iterator it = listeners.begin(); it != listeners.end(); it++ ){
+        (*it)->midi_umount(dev_addr, instance);
+    }
+}
+
+void USBHostManager::midi_rx_cb(uint8_t dev_addr, uint32_t num_packets) {
+    if ( listeners.size() == 0 ) return;
+    for( std::vector<USBListener*>::iterator it = listeners.begin(); it != listeners.end(); it++ ){
+        (*it)->midi_rx(dev_addr, num_packets);
+    }
+}
+
+void USBHostManager::midi_tx_cb(uint8_t dev_addr) {
+    if ( listeners.size() == 0 ) return;
+    for( std::vector<USBListener*>::iterator it = listeners.begin(); it != listeners.end(); it++ ){
+        (*it)->midi_tx(dev_addr);
+    }
+}
+
 
 // HID: USB Host
 static uint8_t _intf_num = 0;
@@ -233,6 +263,23 @@ void tuh_xinput_report_sent_cb(uint8_t dev_addr, uint8_t instance, uint8_t const
     USBHostManager::getInstance().xinput_report_sent_cb(dev_addr, instance, report, len);
 }
 
+void tuh_midi_mount_cb(uint8_t dev_addr, uint8_t in_ep, uint8_t out_ep, uint8_t num_cables_rx, uint16_t num_cables_tx) {
+    USBHostManager::getInstance().midi_mount_cb(dev_addr, in_ep, out_ep, num_cables_rx, num_cables_tx);
+}
+
+void tuh_midi_umount_cb(uint8_t dev_addr, uint8_t instance) {
+    USBHostManager::getInstance().midi_umount_cb(dev_addr, instance);
+}
+
+void tuh_midi_rx_cb(uint8_t dev_addr, uint32_t num_packets) {
+    USBHostManager::getInstance().midi_rx_cb(dev_addr, num_packets);
+}
+
+void tuh_midi_tx_cb(uint8_t dev_addr) {
+    USBHostManager::getInstance().midi_tx_cb(dev_addr);
+}
+
+
 usbh_class_driver_t driver_host[] = {
     {
 #if CFG_TUSB_DEBUG >= 2
@@ -242,11 +289,20 @@ usbh_class_driver_t driver_host[] = {
         .open = xinputh_open,
         .set_config = xinputh_set_config,
         .xfer_cb = xinputh_xfer_cb,
-        .close = xinputh_close}
+        .close = xinputh_close},
+{
+  #if CFG_TUSB_DEBUG >= 2
+    .name = "MIDIH",
+  #endif
+    .init=midih_init,
+    .open=midih_open,
+    .set_config=midih_set_config,
+    .xfer_cb = midih_xfer_cb,
+    .close = midih_close }
 };
 
 usbh_class_driver_t const *usbh_app_driver_get_cb(uint8_t *driver_count) {
-    *driver_count = 1;
+    *driver_count = 2;
     return driver_host;
 }
 
@@ -293,4 +349,10 @@ bool tuh_hid_get_report(uint8_t dev_addr, uint8_t instance, uint8_t report_id, u
 
   TU_ASSERT( tuh_control_xfer(&xfer) );
   return true;
+}
+
+void tuh_mount_cb (uint8_t daddr)
+{
+  printf("Device attached, address = %d\r\n", daddr);
+
 }

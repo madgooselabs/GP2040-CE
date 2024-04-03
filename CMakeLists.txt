@@ -208,6 +208,8 @@ src/addons/keyboard_host_listener.cpp
 src/addons/i2canalog1219.cpp
 src/addons/jslider.cpp
 src/addons/display.cpp
+src/addons/midi_host.cpp
+src/addons/midi_host_listener.cpp
 src/addons/neopicoleds.cpp
 src/addons/playernum.cpp
 src/addons/playerleds.cpp
@@ -248,6 +250,7 @@ hardware_adc
 PicoPeripherals
 WiiExtension
 SNESpad
+usb_midi_host
 pico_mbedtls
 nanopb
 )

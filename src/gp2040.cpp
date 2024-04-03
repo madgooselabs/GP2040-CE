@@ -21,6 +21,7 @@
 #include "addons/keyboard_host.h"
 #include "addons/i2canalog1219.h"
 #include "addons/jslider.h"
+#include "addons/midi_host.h"
 #include "addons/playernum.h"
 #include "addons/reverse.h"
 #include "addons/turbo.h"
@@ -90,6 +91,7 @@ void GP2040::setup() {
 
 	// Setup Add-ons
 	addons.LoadUSBAddon(new KeyboardHostAddon(), CORE0_INPUT);
+	addons.LoadUSBAddon(new MIDIHostAddon(), CORE0_INPUT);
 	addons.LoadAddon(new AnalogInput(), CORE0_INPUT);
 	addons.LoadAddon(new BootselButtonAddon(), CORE0_INPUT);
 	addons.LoadAddon(new DualDirectionalInput(), CORE0_INPUT);

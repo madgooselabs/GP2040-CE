@@ -93,6 +93,9 @@
 // Enable X-Input host config
 #define CFG_TUH_XINPUT      1
 
+#define CFG_TUH_MSC                 1
+#define CFG_MIDI_HOST_DEVSTRINGS 1
+
 # define TUH_OPT_RHPORT 1
 // CFG_TUSB_DEBUG is defined by compiler in DEBUG build
 // #define CFG_TUSB_DEBUG           0
