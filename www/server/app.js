@@ -589,8 +589,7 @@ app.get('/api/getButtonLayouts', (req, res) => {
 //                "3": {"elementType": 3,"parameters": {"x1": 30,"y1": 39,"x2": 40,"y2": 49,"stroke": 1,"fill": 1,"value": 8,"shape": 1,"angleStart": 0,"angleEnd": 0,"closed": 0}}
 //            },
             // keyboard angled
-//            "buttonLayoutId": 4,
-//            "buttonLayout": {
+//            "buttonLayoutId": 4, "buttonLayout": {
 //                "0": {"elementType": 3,"parameters": {"x1": 8,"y1": 37,"x2": 7,"y2": 7,"stroke": 1,"fill": 1,"value": 4,"shape": 2,"angleStart": 0,"angleEnd": 0,"closed": 0}},
 //                "1": {"elementType": 3,"parameters": {"x1": 23,"y1": 24,"x2": 7,"y2": 7,"stroke": 1,"fill": 1,"value": 1,"shape": 2,"angleStart": 0,"angleEnd": 0,"closed": 0}},
 //                "2": {"elementType": 3,"parameters": {"x1": 23,"y1": 50,"x2": 7,"y2": 7,"stroke": 1,"fill": 1,"value": 2,"shape": 2,"angleStart": 0,"angleEnd": 0,"closed": 0}},
@@ -630,6 +629,46 @@ app.get('/api/getButtonLayouts', (req, res) => {
                 "6":{"elementType":2,"parameters":{"x1":93,"y1":34,"x2":8,"y2":8,"stroke":1,"fill":1,"value":128,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
                 "7":{"elementType":2,"parameters":{"x1":111,"y1":38,"x2":8,"y2":8,"stroke":1,"fill":1,"value":64,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}}
             }
+            // 6gawd stickless
+//            "buttonLayoutId":31,"buttonLayout":{
+//                "0":{"elementType":3,"parameters":{"x1":22,"y1":28,"x2":6,"y2":6,"stroke":1,"fill":1,"value":4,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "1":{"elementType":3,"parameters":{"x1":40,"y1":28,"x2":6,"y2":6,"stroke":1,"fill":1,"value":2,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "2":{"elementType":3,"parameters":{"x1":56,"y1":32,"x2":6,"y2":6,"stroke":1,"fill":1,"value":8,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "3":{"elementType":3,"parameters":{"x1":58,"y1":53,"x2":7,"y2":7,"stroke":1,"fill":1,"value":1,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}}
+//            },"buttonLayoutRightId":35,"buttonLayoutRight":{
+//                "0":{"elementType":2,"parameters":{"x1":69,"y1":25,"x2":6,"y2":6,"stroke":1,"fill":1,"value":4,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "1":{"elementType":2,"parameters":{"x1":81,"y1":16,"x2":6,"y2":6,"stroke":1,"fill":1,"value":8,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "2":{"elementType":2,"parameters":{"x1":95,"y1":16,"x2":6,"y2":6,"stroke":1,"fill":1,"value":32,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "3":{"elementType":2,"parameters":{"x1":109,"y1":24,"x2":7,"y2":7,"stroke":1,"fill":1,"value":16,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "4":{"elementType":2,"parameters":{"x1":69,"y1":43,"x2":6,"y2":6,"stroke":1,"fill":1,"value":1,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "5":{"elementType":2,"parameters":{"x1":81,"y1":34,"x2":6,"y2":6,"stroke":1,"fill":1,"value":2,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "6":{"elementType":2,"parameters":{"x1":95,"y1":34,"x2":6,"y2":6,"stroke":1,"fill":1,"value":128,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "7":{"elementType":2,"parameters":{"x1":80,"y1":53,"x2":7,"y2":7,"stroke":1,"fill":1,"value":64,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}}
+//            },
+            // stickless 16
+//            "buttonLayoutId":15,"buttonLayout":{
+//                "0":{"elementType":3,"parameters":{"x1":47,"y1":19,"x2":4,"y2":4,"stroke":1,"fill":1,"value":1,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "1":{"elementType":3,"parameters":{"x1":32,"y1":27,"x2":4,"y2":4,"stroke":1,"fill":1,"value":4,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "2":{"elementType":3,"parameters":{"x1":42,"y1":27,"x2":4,"y2":4,"stroke":1,"fill":1,"value":2,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "3":{"elementType":3,"parameters":{"x1":50,"y1":32,"x2":4,"y2":4,"stroke":1,"fill":1,"value":8,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "4":{"elementType":3,"parameters":{"x1":52,"y1":47,"x2":4,"y2":4,"stroke":1,"fill":1,"value":1,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "5":{"elementType":2,"parameters":{"x1":64,"y1":17,"x2":4,"y2":4,"stroke":1,"fill":1,"value":1024,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "6":{"elementType":2,"parameters":{"x1":42,"y1":45,"x2":4,"y2":4,"stroke":1,"fill":1,"value":1024,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "7":{"elementType":2,"parameters":{"x1":66,"y1":45,"x2":4,"y2":4,"stroke":1,"fill":1,"value":2048,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "8":{"elementType":2,"parameters":{"x1":77,"y1":15,"x2":2,"y2":2,"stroke":1,"fill":1,"value":8192,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "9":{"elementType":2,"parameters":{"x1":82,"y1":15,"x2":2,"y2":2,"stroke":1,"fill":1,"value":4096,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "10":{"elementType":2,"parameters":{"x1":87,"y1":15,"x2":2,"y2":2,"stroke":1,"fill":1,"value":256,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "11":{"elementType":2,"parameters":{"x1":92,"y1":15,"x2":2,"y2":2,"stroke":1,"fill":1,"value":512,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}}
+//            },"buttonLayoutRightId":20,"buttonLayoutRight":{
+//                "0":{"elementType":2,"parameters":{"x1":59,"y1":27,"x2":4,"y2":4,"stroke":1,"fill":1,"value":4,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "1":{"elementType":2,"parameters":{"x1":69,"y1":25,"x2":4,"y2":4,"stroke":1,"fill":1,"value":8,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "2":{"elementType":2,"parameters":{"x1":79,"y1":25,"x2":4,"y2":4,"stroke":1,"fill":1,"value":32,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "3":{"elementType":2,"parameters":{"x1":89,"y1":27,"x2":4,"y2":4,"stroke":1,"fill":1,"value":16,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "4":{"elementType":2,"parameters":{"x1":59,"y1":37,"x2":4,"y2":4,"stroke":1,"fill":1,"value":1,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "5":{"elementType":2,"parameters":{"x1":69,"y1":35,"x2":4,"y2":4,"stroke":1,"fill":1,"value":2,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "6":{"elementType":2,"parameters":{"x1":79,"y1":35,"x2":4,"y2":4,"stroke":1,"fill":1,"value":128,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}},
+//                "7":{"elementType":2,"parameters":{"x1":89,"y1":37,"x2":4,"y2":4,"stroke":1,"fill":1,"value":64,"shape":0,"angleStart":0,"angleEnd":0,"closed":0}}
+//            },
         }
     });
 });
