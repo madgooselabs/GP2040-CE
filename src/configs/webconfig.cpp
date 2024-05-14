@@ -424,6 +424,10 @@ std::string setDisplayOptions(DisplayOptions& displayOptions)
     readDoc(displayOptions.enabled, doc, "enabled");
     readDoc(displayOptions.i2cAddress, doc, "i2cAddress");
     readDoc(displayOptions.i2cBlock, doc, "i2cBlock");
+    readDoc(displayOptions.spiBlock, doc, "spiBlock");
+    readDoc(displayOptions.spiDCPin, doc, "spiDCPin");
+    readDoc(displayOptions.spiRSTPin, doc, "spiRSTPin");
+    readDoc(displayOptions.spiCSPin, doc, "spiCSPin");
     readDoc(displayOptions.flip, doc, "flipDisplay");
     readDoc(displayOptions.invert, doc, "invertDisplay");
     readDoc(displayOptions.buttonLayout, doc, "buttonLayout");
@@ -468,6 +472,10 @@ std::string getDisplayOptions() // Manually set Document Attributes for the disp
     writeDoc(doc, "enabled", displayOptions.enabled ? 1 : 0);
     writeDoc(doc, "i2cAddress", displayOptions.i2cAddress);
     writeDoc(doc, "i2cBlock", displayOptions.i2cBlock);
+    writeDoc(doc, "spiBlock", displayOptions.spiBlock);
+    writeDoc(doc, "spiDCPin", displayOptions.spiDCPin);
+    writeDoc(doc, "spiRSTPin", displayOptions.spiRSTPin);
+    writeDoc(doc, "spiCSPin", displayOptions.spiCSPin);
     writeDoc(doc, "flipDisplay", displayOptions.flip);
     writeDoc(doc, "invertDisplay", displayOptions.invert ? 1 : 0);
     writeDoc(doc, "buttonLayout", displayOptions.buttonLayout);

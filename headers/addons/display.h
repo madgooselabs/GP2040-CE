@@ -23,7 +23,7 @@
 #include "peripheral_spi.h"
 
 #ifndef HAS_I2C_DISPLAY
-#define HAS_I2C_DISPLAY -1
+#define HAS_I2C_DISPLAY 0
 #endif
 
 #ifndef DISPLAY_I2C_ADDR
@@ -44,6 +44,26 @@
 
 #ifndef I2C_SPEED
 #define I2C_SPEED 800000
+#endif
+
+#ifndef HAS_SPI_DISPLAY
+#define HAS_SPI_DISPLAY 0
+#endif
+
+#ifndef DISPLAY_SPI_BLOCK
+#define DISPLAY_SPI_BLOCK spi0
+#endif
+
+#ifndef DISPLAY_SPI_CS
+#define DISPLAY_SPI_CS -1
+#endif
+
+#ifndef DISPLAY_SPI_RESET
+#define DISPLAY_SPI_RESET -1
+#endif
+
+#ifndef DISPLAY_SPI_DC
+#define DISPLAY_SPI_DC -1
 #endif
 
 #ifndef DISPLAY_SIZE

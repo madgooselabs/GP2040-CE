@@ -24,14 +24,23 @@ bool DisplayAddon::available() {
 void DisplayAddon::setup() {
     const DisplayOptions& options = Storage::getInstance().getDisplayOptions();
     PeripheralI2C* i2c = PeripheralManager::getInstance().getI2C(options.i2cBlock);
+    PeripheralSPI* spi = PeripheralManager::getInstance().getSPI(options.spiBlock);
 
     // Setup GPGFX Options
     GPGFX_DisplayTypeOptions gpOptions;
-    if (PeripheralManager::getInstance().isI2CEnabled(options.i2cBlock)) {
+    if (PeripheralManager::getInstance().isI2CEnabled(options.i2cBlock) || PeripheralManager::getInstance().isSPIEnabled(options.spiBlock)) {
         gpOptions.displayType = GPGFX_DisplayType::TYPE_SSD1306;
-        gpOptions.i2c = i2c;
+        if (PeripheralManager::getInstance().isI2CEnabled(options.i2cBlock)) {
+            gpOptions.i2c = i2c;
+            gpOptions.address = options.i2cAddress;
+        }
+        if (PeripheralManager::getInstance().isSPIEnabled(options.spiBlock)) {
+            gpOptions.spi = spi;
+            gpOptions.pinReset = options.spiRSTPin;
+            gpOptions.pinCS = options.spiCSPin;
+            gpOptions.pinDC = options.spiDCPin;
+        }
         gpOptions.size = options.size;
-        gpOptions.address = options.i2cAddress;
         gpOptions.orientation = options.flip;
         gpOptions.inverted = options.invert;
         gpOptions.font.fontData = GP_Font_Standard;

@@ -12,7 +12,7 @@ PeripheralSPI::PeripheralSPI()
 #endif
 }
 
-void PeripheralSPI::setConfig(uint8_t block, uint8_t tx, uint8_t rx, uint8_t sck, uint8_t cs) {
+void PeripheralSPI::setConfig(uint8_t block, uint8_t tx, uint8_t rx, uint8_t sck, int8_t cs) {
     if (block < NUM_SPIS) {
         _SPI = _hardwareBlocks[block];
         _TX = tx;

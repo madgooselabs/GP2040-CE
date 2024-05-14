@@ -224,6 +224,11 @@ message DisplayOptions
     
     optional int32 displaySaverTimeout = 17;
     optional bool turnOffWhenSuspended = 18;
+
+    optional int32 spiBlock = 19;
+    optional int32 spiDCPin = 20;
+    optional int32 spiRSTPin = 21;
+    optional int32 spiCSPin = 22;
 }
 
 message LEDOptions

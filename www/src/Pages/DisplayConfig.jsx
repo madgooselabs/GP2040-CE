@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState, useRef } from 'react';
-import { Button, Form, Row, Col, FormLabel } from 'react-bootstrap';
+import { Button, Form, Row, Col, FormLabel, Card } from 'react-bootstrap';
 import { Formik, useFormikContext, Field } from 'formik';
 import chunk from 'lodash/chunk';
 import * as yup from 'yup';
@@ -12,7 +12,7 @@ import FormSelect from '../Components/FormSelect';
 import Section from '../Components/Section';
 import WebApi from '../Services/WebApi';
 
-import { I2C_BLOCKS } from '../Data/Peripherals';
+import { I2C_BLOCKS, SPI_BLOCKS } from '../Data/Peripherals';
 
 const ON_OFF_OPTIONS = [
 	{ label: 'Disabled', value: 0 },
@@ -37,6 +37,10 @@ const defaultValues = {
 	enabled: false,
 	i2cAddress: '0x3C',
 	i2cBlock: 0,
+    spiBlock: -1,
+    spiDCPin: -1,
+    spiRSTPin: -1,
+    spiCSPin: -1,
 	flipDisplay: false,
 	invertDisplay: false,
 	buttonLayout: 0,
@@ -75,14 +79,25 @@ let buttonLayoutSchema = buttonLayoutSchemaBase
 let buttonLayoutRightSchema = buttonLayoutSchemaBase
 	.label('Button Layout Right');
 
+let i2cBlocksOptional = [{ label: 'None', value: -1, pins: {}}, ...I2C_BLOCKS];
+let spiBlocksOptional = [{ label: 'None', value: -1, pins: {}}, ...SPI_BLOCKS];
+
+console.dir(i2cBlocksOptional);
+
 const schema = yup.object().shape({
 	enabled: yup.number().label('Enabled?'),
 	i2cAddress: yup.string().required().label('I2C Address'),
 	i2cBlock: yup
 		.number()
-		.required()
-		.oneOf(I2C_BLOCKS.map((o) => o.value))
+		.oneOf(i2cBlocksOptional.map((o) => o.value))
 		.label('I2C Block'),
+	spiBlock: yup
+		.number()
+		.oneOf(spiBlocksOptional.map((o) => o.value))
+		.label('SPI Block'),
+    spiDCPin: yup.number().required().checkUsedPins(),
+    spiRSTPin: yup.number().required().checkUsedPins(),
+    spiCSPin: yup.number().required().checkUsedPins(),
 	flipDisplay: yup
 		.number()
 		.oneOf(DISPLAY_FLIP_MODES.map((o) => o.value))
@@ -244,8 +259,17 @@ export default function DisplayConfigPage() {
 			initialValues={defaultValues}
 		>
 			{({ handleSubmit, handleChange, values, errors, setFieldValue }) => {
-                const handlePeripheralChange = (e) => {
-                    let device = getSelectedPeripheral('i2c', e.target.value);
+                const handlePeripheralChangeI2C = (e) => {
+                    if (e.target.value != -1) {
+                        let device = getSelectedPeripheral('i2c', e.target.value);
+                    }
+                    handleChange(e);
+                };
+                
+                const handlePeripheralChangeSPI = (e) => {
+                    if (e.target.value != -1) {
+                        let device = getSelectedPeripheral('spi', e.target.value);
+                    }
                     handleChange(e);
                 };
                 
@@ -267,51 +291,128 @@ export default function DisplayConfigPage() {
                             </ul>
                             <Form noValidate onSubmit={handleSubmit}>
                                 <h1>{t('DisplayConfig:section.hardware-header')}</h1>
-                                <Row className="mb-4">
-                                    <FormSelect
-                                        label={t('Common:switch-enabled')}
-                                        name="enabled"
-                                        className="form-select-sm"
-                                        groupClassName="col-sm-3 mb-3"
-                                        value={values.enabled}
-                                        error={errors.enabled}
-                                        isInvalid={errors.enabled}
-                                        onChange={handleChange}
-                                    >
-                                        {ON_OFF_OPTIONS.map((o, i) => (
-                                            <option key={`enabled-option-${i}`} value={o.value}>
-                                                {o.label}
-                                            </option>
-                                        ))}
-                                    </FormSelect>
-                                    <FormSelect
-                                        label={t('DisplayConfig:form.i2c-block-label')}
-                                        name="i2cBlock"
-                                        className="form-select-sm"
-                                        groupClassName="col-sm-3 mb-3"
-                                        value={values.i2cBlock}
-                                        error={errors.i2cBlock}
-                                        isInvalid={errors.i2cBlock}
-                                        onChange={handlePeripheralChange}
-                                    >
-                                        {getAvailablePeripherals('i2c').map((o, i) => (
-                                            <option key={`i2cBlock-option-${i}`} value={o.value}>
-                                                {o.label}
-                                            </option>
-                                        ))}
-                                    </FormSelect>
-                                    <FormControl
-                                        type="text"
-                                        label={t('DisplayConfig:form.i2c-address-label')}
-                                        name="i2cAddress"
-                                        className="form-control-sm"
-                                        groupClassName="col-sm-3 mb-3"
-                                        value={values.i2cAddress}
-                                        error={errors.i2cAddress}
-                                        isInvalid={errors.i2cAddress}
-                                        onChange={handleChange}
-                                        maxLength={4}
-                                    />
+                                <Row className="mb-12">
+                                    <div className="col-sm-3 mb-3">
+                                        <FormSelect
+                                            label={t('Common:switch-enabled')}
+                                            name="enabled"
+                                            className="form-select-sm"
+                                            groupClassName="mb-3"
+                                            value={values.enabled}
+                                            error={errors.enabled}
+                                            isInvalid={errors.enabled}
+                                            onChange={handleChange}
+                                        >
+                                            {ON_OFF_OPTIONS.map((o, i) => (
+                                                <option key={`enabled-option-${i}`} value={o.value}>
+                                                    {o.label}
+                                                </option>
+                                            ))}
+                                        </FormSelect>
+                                    </div>
+                                    <div className="col-sm-3 mb-3">
+                                        <FormSelect
+                                            label={t('DisplayConfig:form.i2c-block-label')}
+                                            name="i2cBlock"
+                                            className="form-select-sm"
+                                            groupClassName="mb-3"
+                                            value={values.i2cBlock}
+                                            error={errors.i2cBlock}
+                                            isInvalid={errors.i2cBlock}
+                                            onChange={handlePeripheralChangeI2C}
+                                        >
+                                            <option key="i2cBlock-option-none" value="-1">{t("DisplayConfig:form.block-select-none")}</option>
+                                            {getAvailablePeripherals('i2c').map((o, i) => (
+                                                <option key={`i2cBlock-option-${i}`} value={o.value}>
+                                                    {o.label}
+                                                </option>
+                                            ))}
+                                        </FormSelect>
+                                        <Card hidden={values.i2cBlock == -1}>
+                                            <Card.Body>
+                                                <Card.Title>I2C Options</Card.Title>
+                                                <FormControl
+                                                    type="text"
+                                                    label={t('DisplayConfig:form.i2c-address-label')}
+                                                    name="i2cAddress"
+                                                    className="form-control-sm"
+                                                    groupClassName="mb-3"
+                                                    hidden={values.i2cBlock == -1}
+                                                    value={values.i2cAddress}
+                                                    error={errors.i2cAddress}
+                                                    isInvalid={errors.i2cAddress}
+                                                    onChange={handleChange}
+                                                    maxLength={4}
+                                                />
+                                            </Card.Body>
+                                        </Card>
+                                    </div>
+                                    <div className="col-sm-3 mb-3">
+                                        <FormSelect
+                                            label={t('DisplayConfig:form.spi-block-label')}
+                                            name="spiBlock"
+                                            className="form-select-sm"
+                                            groupClassName="mb-3"
+                                            value={values.spiBlock}
+                                            error={errors.spiBlock}
+                                            isInvalid={errors.spiBlock}
+                                            onChange={handlePeripheralChangeSPI}
+                                        >
+                                            <option key="spiBlock-option-none" value="-1">{t("DisplayConfig:form.block-select-none")}</option>
+                                            {getAvailablePeripherals('spi').map((o, i) => (
+                                                <option key={`spiBlock-option-${i}`} value={o.value}>
+                                                    {o.label}
+                                                </option>
+                                            ))}
+                                        </FormSelect>
+                                        <Card hidden={values.spiBlock == -1}>
+                                            <Card.Body>
+                                                <Card.Title>SPI Options</Card.Title>
+                                                <FormControl
+                                                    type="number"
+                                                    label={t('DisplayConfig:form.spi-dc-pin-label')}
+                                                    name="spiDCPin"
+                                                    className="form-control-sm"
+                                                    groupClassName="mb-3"
+                                                    hidden={values.spiBlock == -1}
+                                                    value={values.spiDCPin}
+                                                    error={errors.spiDCPin}
+                                                    isInvalid={errors.spiDCPin}
+                                                    onChange={handleChange}
+                                                    min={-1}
+                                                    max={29}
+                                                />
+                                                <FormControl
+                                                    type="number"
+                                                    label={t('DisplayConfig:form.spi-rst-pin-label')}
+                                                    name="spiRSTPin"
+                                                    className="form-control-sm"
+                                                    groupClassName="mb-3"
+                                                    hidden={values.spiBlock == -1}
+                                                    value={values.spiRSTPin}
+                                                    error={errors.spiRSTPin}
+                                                    isInvalid={errors.spiRSTPin}
+                                                    onChange={handleChange}
+                                                    min={-1}
+                                                    max={29}
+                                                />
+                                                <FormControl
+                                                    type="number"
+                                                    label={t('DisplayConfig:form.spi-cs-pin-label')}
+                                                    name="spiCSPin"
+                                                    className="form-control-sm"
+                                                    groupClassName="mb-3"
+                                                    hidden={values.spiBlock == -1}
+                                                    value={values.spiCSPin}
+                                                    error={errors.spiCSPin}
+                                                    isInvalid={errors.spiCSPin}
+                                                    onChange={handleChange}
+                                                    min={-1}
+                                                    max={29}
+                                                />
+                                            </Card.Body>
+                                        </Card>
+                                    </div>
                                 </Row>
                                 <h1>{t('DisplayConfig:section.screen-header')}</h1>
                                 <Row className="mb-4">

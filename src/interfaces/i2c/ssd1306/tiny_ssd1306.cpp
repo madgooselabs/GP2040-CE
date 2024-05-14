@@ -4,17 +4,48 @@ void GPGFX_TinySSD1306::init(GPGFX_DisplayTypeOptions options) {
     _options.displayType = options.displayType;
     _options.i2c = options.i2c;
     _options.spi = options.spi;
+    _options.pinReset = options.pinReset;
+    _options.pinCS = options.pinCS;
+    _options.pinDC = options.pinDC;
     _options.size = options.size;
     _options.address = options.address;
     _options.orientation = options.orientation;
     _options.inverted = options.inverted;
     _options.font = options.font;
 
-    _options.i2c->readRegister(_options.address, 0x00, &this->screenType, 1);
-    this->screenType &= 0x0F;
+    // currently, mixed mode screens are not allowed with the driver.
+    // in other words, the screens must be identical other than their peripheral (eg. SPI and I2C SSD1306)
 
-    if (isSH1106(this->screenType)) {
-        this->screenType = SCREEN_132x64;
+    if (_options.i2c) {
+        _options.i2c->readRegister(_options.address, 0x00, &this->screenType, 1);
+        this->screenType &= 0x0F;
+
+        if (isSH1106(this->screenType)) {
+            this->screenType = SCREEN_132x64;
+        }
+    }
+
+    if (_options.spi) {
+        gpio_init(_options.pinReset);
+        gpio_set_dir(_options.pinReset, GPIO_OUT);
+
+        gpio_init(_options.pinDC);
+        gpio_set_dir(_options.pinDC, GPIO_OUT);
+
+        gpio_init(_options.pinCS);
+        gpio_set_dir(_options.pinCS, GPIO_OUT);
+        
+        // Reset SSD1306 display
+        gpio_put(_options.pinReset, 1);
+        gpio_put(_options.pinReset, 0);
+        gpio_put(_options.pinReset, 1);
+
+        // check if a screen was previously detected by I2C and assume same for SPI
+        if (this->screenType != SCREEN_132x64) {
+            if (isSH1106(this->screenType)) {
+                this->screenType = SCREEN_132x64;
+            }
+        }
     }
 
 	uint8_t commands[] = {
@@ -64,10 +95,10 @@ void GPGFX_TinySSD1306::init(GPGFX_DisplayTypeOptions options) {
 
     clear();
     drawBuffer(NULL);
+
 }
 
 bool GPGFX_TinySSD1306::isSH1106(int detectedDisplay) {
-
     this->setPower(false);
 
     const uint8_t RANDOM_DATA[] = { 0xbf, 0x88, 0x13, 0x41, 0x00 };
@@ -369,7 +400,7 @@ void GPGFX_TinySSD1306::drawBuffer(uint8_t* pBuffer) {
 	uint8_t buffer[bufferSize+1] = {SET_START_LINE};
 
 	int result = -1;
-	
+
     if (this->screenType == ScreenAlternatives::SCREEN_132x64) {
         uint16_t x = 0;
         uint16_t y = 0;
@@ -384,7 +415,8 @@ void GPGFX_TinySSD1306::drawBuffer(uint8_t* pBuffer) {
                 memcpy(&buffer[1],&pBuffer[y*MAX_SCREEN_WIDTH],MAX_SCREEN_WIDTH);
             }
         
-            result = _options.i2c->write(_options.address, buffer, MAX_SCREEN_WIDTH+3, false);
+            //result = _options.i2c->write(_options.address, buffer, MAX_SCREEN_WIDTH+3, false);
+            sendData(buffer, MAX_SCREEN_WIDTH+3);
         }
     } else {
         sendCommand(CommandOps::PAGE_ADDRESS);
@@ -399,7 +431,8 @@ void GPGFX_TinySSD1306::drawBuffer(uint8_t* pBuffer) {
         } else {
             memcpy(&buffer[1],pBuffer,bufferSize);
         }
-        result = _options.i2c->write(_options.address, buffer, sizeof(buffer), false);
+        //result = _options.i2c->write(_options.address, buffer, sizeof(buffer), false);
+        sendData(buffer, sizeof(buffer));
     }
 
 	if (framePage < MAX_SCREEN_HEIGHT/8) {
@@ -415,5 +448,35 @@ void GPGFX_TinySSD1306::sendCommand(uint8_t command){
 }
 
 void GPGFX_TinySSD1306::sendCommands(uint8_t* commands, uint16_t length){ 
-	int result = _options.i2c->write(_options.address, commands, length, false);
+    int result = 0;
+    if (_options.i2c) {
+	    result = _options.i2c->write(_options.address, commands, length, false);
+    }
+    if (_options.spi) {
+        for (uint16_t i = 1; i < length; i++) {
+            gpio_put(_options.pinCS, 1);
+            gpio_put(_options.pinDC, 0);
+            gpio_put(_options.pinCS, 0);
+            _options.spi->transfer(&commands[i], nullptr, 1);
+            gpio_put(_options.pinCS, 1);
+        }
+    }
+}
+
+uint16_t GPGFX_TinySSD1306::sendData(uint8_t* data, uint16_t length) {
+    int result = 0;
+
+    if (_options.i2c) {
+        _options.i2c->write(_options.address, data, length, false);
+    }
+
+    if (_options.spi) {
+        gpio_put(_options.pinCS, 1);
+        gpio_put(_options.pinDC, 1);
+        gpio_put(_options.pinCS, 0);
+        _options.spi->transfer(data, nullptr, length);
+        gpio_put(_options.pinCS, 1);
+    }
+
+    return result;
 }

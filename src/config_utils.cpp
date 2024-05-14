@@ -357,12 +357,16 @@ void ConfigUtils::initUnsetPropertiesWithDefaults(Config& config)
     INIT_UNSET_PROPERTY(config.keyboardMapping, keyButtonA2, KEY_BUTTON_A2);
 
     // displayOptions
-    INIT_UNSET_PROPERTY(config.displayOptions, enabled, !!HAS_I2C_DISPLAY);
+    INIT_UNSET_PROPERTY(config.displayOptions, enabled, !!(HAS_I2C_DISPLAY|HAS_SPI_DISPLAY));
     INIT_UNSET_PROPERTY(config.displayOptions, i2cBlock, (DISPLAY_I2C_BLOCK == i2c0) ? 0 : 1);
     INIT_UNSET_PROPERTY(config.displayOptions, deprecatedI2cSDAPin, -1);
     INIT_UNSET_PROPERTY(config.displayOptions, deprecatedI2cSCLPin, -1);
     INIT_UNSET_PROPERTY(config.displayOptions, i2cAddress, DISPLAY_I2C_ADDR);
     INIT_UNSET_PROPERTY(config.displayOptions, deprecatedI2cSpeed, I2C_SPEED);
+    INIT_UNSET_PROPERTY(config.displayOptions, spiBlock, (DISPLAY_SPI_BLOCK == spi0) ? 0 : 1);
+    INIT_UNSET_PROPERTY(config.displayOptions, spiDCPin, (!!HAS_SPI_DISPLAY) ? DISPLAY_SPI_DC : -1);
+    INIT_UNSET_PROPERTY(config.displayOptions, spiRSTPin, (!!HAS_SPI_DISPLAY) ? DISPLAY_SPI_RESET : -1);
+    INIT_UNSET_PROPERTY(config.displayOptions, spiCSPin, (!!HAS_SPI_DISPLAY) ? DISPLAY_SPI_CS : -1);
     INIT_UNSET_PROPERTY(config.displayOptions, buttonLayout, BUTTON_LAYOUT);
     INIT_UNSET_PROPERTY(config.displayOptions, buttonLayoutRight, BUTTON_LAYOUT_RIGHT);
     INIT_UNSET_PROPERTY(config.displayOptions, turnOffWhenSuspended, DISPLAY_TURN_OFF_WHEN_SUSPENDED);

@@ -38,10 +38,17 @@ typedef struct {
     PeripheralI2C* i2c;
     PeripheralSPI* spi;
     uint16_t size;
-    uint16_t address;
     uint8_t orientation;
     bool inverted;
     GPGFX_DisplayFont font;
+
+    // i2c options
+    uint16_t address;
+
+    // spi options
+    int16_t pinReset;
+    int16_t pinCS;
+    int16_t pinDC;
 } GPGFX_DisplayTypeOptions;
 
 #endif
