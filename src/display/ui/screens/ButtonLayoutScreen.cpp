@@ -131,6 +131,7 @@ void ButtonLayoutScreen::generateHeader() {
 	{
 		case INPUT_MODE_HID:    statusBar += "DINPUT"; break;
 		case INPUT_MODE_SWITCH: statusBar += "SWITCH"; break;
+		case INPUT_MODE_SWITCH_PRO: statusBar += "SWPRO"; break;
 		case INPUT_MODE_XINPUT: statusBar += "XINPUT"; break;
 		case INPUT_MODE_MDMINI: statusBar += "GEN/MD"; break;
 		case INPUT_MODE_NEOGEO: statusBar += "NGMINI"; break;

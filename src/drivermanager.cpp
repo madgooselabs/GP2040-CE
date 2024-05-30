@@ -11,6 +11,7 @@
 #include "drivers/psclassic/PSClassicDriver.h"
 #include "drivers/ps4/PS4Driver.h"
 #include "drivers/switch/SwitchDriver.h"
+#include "drivers/switchpro/SwitchProDriver.h"
 #include "drivers/xbone/XBOneDriver.h"
 #include "drivers/xboxog/XboxOriginalDriver.h"
 #include "drivers/xinput/XInputDriver.h"
@@ -54,6 +55,9 @@ void DriverManager::setup(InputMode mode) {
             break;
         case INPUT_MODE_SWITCH:
             driver = new SwitchDriver();
+            break;
+        case INPUT_MODE_SWITCH_PRO:
+            driver = new SwitchProDriver();
             break;
         case INPUT_MODE_XBONE:
             driver = new XBOneDriver();

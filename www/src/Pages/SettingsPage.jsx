@@ -125,6 +125,11 @@ const INPUT_MODES = [
 		value: 1,
 		group: 'primary',
 	},
+	{
+		labelKey: 'input-mode-options.nintendo-switch-pro',
+		value: 14,
+		group: 'primary',
+	},
 	{ labelKey: 'input-mode-options.ps3', value: 2, group: 'primary' },
 	{ labelKey: 'input-mode-options.keyboard', value: 3, group: 'primary' },
 	{
@@ -162,6 +167,11 @@ const INPUT_BOOT_MODES = [
 	{
 		labelKey: 'input-mode-options.nintendo-switch',
 		value: 1,
+		group: 'primary',
+	},
+	{
+		labelKey: 'input-mode-options.nintendo-switch-pro',
+		value: 14,
 		group: 'primary',
 	},
 	{ labelKey: 'input-mode-options.ps3', value: 2, group: 'primary' },
