@@ -59,33 +59,101 @@
 #define SWITCH_PRO_JOYSTICK_MAX 0xFF
 
 typedef enum {
-  BLUETOOTH_PAIR_REQUEST = 0x01,
-  REQUEST_DEVICE_INFO = 0x02,
-  SET_SHIPMENT = 0x08,
-  SPI_READ = 0x10,
-  SET_MODE = 0x03,
-  TRIGGER_BUTTONS = 0x04,
-  TOGGLE_IMU = 0x40,
-  ENABLE_VIBRATION = 0x48,
-  SET_PLAYER = 0x30,
-  SET_NFC_IR_STATE = 0x22,
-  SET_NFC_IR_CONFIG = 0x21,
-  IMU_SENSITIVITY = 0x41
-} SwitchRequest;
+    REPORT_OUTPUT_01 = 0x01,
+    REPORT_OUTPUT_10 = 0x10,
+    REPORT_OUTPUT_21 = 0x21,
+    REPORT_OUTPUT_30 = 0x30,
+    REPORT_USB_OUTPUT_80 = 0x80,
+    REPORT_USB_INPUT_81 = 0x81,
+} SwitchReportID;
 
-const uint8_t VIB_OPTS[4] = {0x0a, 0x0c, 0x0b, 0x09};
+typedef enum {
+    IDENTIFY = 0x01,
+    HANDSHAKE,
+    BAUD_RATE,
+    DISABLE_USB_TIMEOUT,
+    ENABLE_USB_TIMEOUT
+} SwitchOutputSubtypes;
+
+typedef enum {
+    GET_CONTROLLER_STATE = 0x00,
+    BLUETOOTH_PAIR_REQUEST = 0x01,
+    REQUEST_DEVICE_INFO = 0x02,
+    SET_MODE = 0x03,
+    TRIGGER_BUTTONS = 0x04,
+    SET_SHIPMENT = 0x08,
+    SPI_READ = 0x10,
+    SET_NFC_IR_CONFIG = 0x21,
+    SET_NFC_IR_STATE = 0x22,
+    SET_PLAYER_LIGHTS = 0x30,
+    GET_PLAYER_LIGHTS = 0x31,
+    COMMAND_UNKNOWN_33 = 0x33,
+    SET_HOME_LIGHT = 0x38,
+    TOGGLE_IMU = 0x40,
+    IMU_SENSITIVITY = 0x41,
+    READ_IMU = 0x43,
+    ENABLE_VIBRATION = 0x48,
+    GET_VOLTAGE = 0x50,
+} SwitchCommands;
 
 typedef struct __attribute((packed, aligned(1)))
 {
-	uint8_t batteryConnection;
-	uint16_t buttons;
-	uint8_t hat;
-	uint8_t lx;
-	uint8_t ly;
-	uint8_t rx;
-	uint8_t ry;
-	uint8_t vendor;
+    uint8_t reportID;
+    uint8_t timestamp;
+    uint8_t connection_info : 4;
+    uint8_t battery_level : 4;
+
+    // byte 00
+    uint8_t button_y : 1;
+    uint8_t button_x : 1;
+    uint8_t button_b : 1;
+    uint8_t button_a : 1;
+    uint8_t button_right_sl : 1;
+    uint8_t button_right_sr : 1;
+    uint8_t button_r : 1;
+    uint8_t button_zr : 1;
+
+    // byte 01
+    uint8_t button_minus : 1;
+    uint8_t button_plus : 1;
+    uint8_t button_thumb_r : 1;
+    uint8_t button_thumb_l : 1;
+    uint8_t button_home : 1;
+    uint8_t button_capture : 1;
+    uint8_t dummy : 1;
+    uint8_t charging_grip : 1;
+
+    // byte 02
+    uint8_t dpad_down : 1;
+    uint8_t dpad_up : 1;
+    uint8_t dpad_right : 1;
+    uint8_t dpad_left : 1;
+    uint8_t button_left_sl : 1;
+    uint8_t button_left_sr : 1;
+    uint8_t button_l : 1;
+    uint8_t button_zl : 1;
+
+    uint8_t analog[6];
+    uint8_t vibrator_input_report;
+    uint8_t imu_data[36];
+    uint8_t padding[15];
 } SwitchProReport;
+
+typedef enum {
+    SWITCH_TYPE_LEFT_JOYCON = 0x01,
+    SWITCH_TYPE_RIGHT_JOYCON,
+    SWITCH_TYPE_PRO_CONTROLLER
+} SwitchControllerType;
+
+typedef struct {
+    uint8_t majorVersion;
+    uint8_t minorVersion;
+    uint8_t controllerType;
+    uint8_t unknown00;
+    uint8_t macAddress[6];
+    uint8_t unknown01;
+    uint8_t storedColors;
+} SwitchDeviceInfo;
 
 typedef struct
 {
@@ -189,6 +257,7 @@ static const uint8_t switch_pro_report_descriptor[] =
     0x15, 0x00,        // Logical Minimum (0)
     0x09, 0x04,        // Usage (Joystick)
     0xA1, 0x01,        // Collection (Application)
+
     0x85, 0x30,        //   Report ID (48)
     0x05, 0x01,        //   Usage Page (Generic Desktop Ctrls)
     0x05, 0x09,        //   Usage Page (Button)
@@ -245,35 +314,42 @@ static const uint8_t switch_pro_report_descriptor[] =
     0x95, 0x34,        //   Report Count (52)
     0x81, 0x03,        //   Input (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
     0x06, 0x00, 0xFF,  //   Usage Page (Vendor Defined 0xFF00)
+
     0x85, 0x21,        //   Report ID (33)
     0x09, 0x01,        //   Usage (0x01)
     0x75, 0x08,        //   Report Size (8)
     0x95, 0x3F,        //   Report Count (63)
     0x81, 0x03,        //   Input (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+
     0x85, 0x81,        //   Report ID (-127)
     0x09, 0x02,        //   Usage (0x02)
     0x75, 0x08,        //   Report Size (8)
     0x95, 0x3F,        //   Report Count (63)
     0x81, 0x03,        //   Input (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+
     0x85, 0x01,        //   Report ID (1)
     0x09, 0x03,        //   Usage (0x03)
     0x75, 0x08,        //   Report Size (8)
     0x95, 0x3F,        //   Report Count (63)
     0x91, 0x83,        //   Output (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Volatile)
+
     0x85, 0x10,        //   Report ID (16)
     0x09, 0x04,        //   Usage (0x04)
     0x75, 0x08,        //   Report Size (8)
     0x95, 0x3F,        //   Report Count (63)
     0x91, 0x83,        //   Output (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Volatile)
+
     0x85, 0x80,        //   Report ID (-128)
     0x09, 0x05,        //   Usage (0x05)
     0x75, 0x08,        //   Report Size (8)
     0x95, 0x3F,        //   Report Count (63)
     0x91, 0x83,        //   Output (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Volatile)
+
     0x85, 0x82,        //   Report ID (-126)
     0x09, 0x06,        //   Usage (0x06)
     0x75, 0x08,        //   Report Size (8)
     0x95, 0x3F,        //   Report Count (63)
     0x91, 0x83,        //   Output (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Volatile)
+
     0xC0,              // End Collection
 };

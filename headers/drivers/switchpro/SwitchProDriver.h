@@ -28,41 +28,27 @@ public:
 
     void set_controller_rumble(bool rumble);
 private:
-    uint8_t last_report[CFG_TUD_ENDPOINT0_SIZE] = { };
+    uint8_t report[SWITCH_PRO_ENDPOINT_SIZE] = { };
+    uint8_t last_report[SWITCH_PRO_ENDPOINT_SIZE] = { };
     SwitchProReport switchReport;
-    uint8_t _report[100] = {0x0};
-    uint8_t _switchRequestReport[100] = {0x0};
-    uint8_t _addr[6] = {0x0};
-    bool _vibration_enabled = false;
-    uint8_t _vibration_report = 0x00;
-    uint8_t _vibration_idx = 0x00;
-    bool _imu_enabled = false;
-    uint8_t _player_number = 0x00;
-    bool _device_info_queried = false;
-    uint32_t _timer = 0;
-    uint32_t _timestamp = 0;
+    uint8_t last_report_counter;
+    uint32_t last_report_timer;
+    bool isReady = false;
 
-    uint8_t* generate_usb_report();
-    void set_empty_report();
-    void set_empty_switch_request_report();
-    uint8_t* generate_report();
-    void set_subcommand_reply();
-    void set_standard_input_report();
-    void set_timer();
-    void set_full_input_report();
-    void set_bt();
-    void set_device_info();
-    void set_shipment();
-    void toggle_imu();
-    void imu_sensitivity();
-    void set_imu_data();
-    void spi_read();
-    void set_mode();
-    void set_trigger_buttons();
-    void enable_vibration();
-    void set_player_lights();
-    void set_nfc_ir_state();
-    void set_nfc_ir_config();
+    uint8_t handshakeCounter = 0;
+
+    const uint8_t colorProfiles[12] = {
+        0x1B,0x1B,0x1D,
+        0xEC,0x00,0x8C,
+        0xEC,0x00,0x8C,
+        0xEC,0x00,0x8C,
+    };
+
+    SwitchDeviceInfo deviceInfo;
+    uint8_t playerID = 0;
+    uint8_t inputMode = 0;
+    bool isIMUEnabled = false;
+    bool isVibrationEnabled = false;
 };
 
 #endif // _SWITCH_PRO_DRIVER_H_
