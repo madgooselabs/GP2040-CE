@@ -1,0 +1,27 @@
+.button-layout-properties {
+    margin-top: 20px;
+
+    .button-layout-properties-grid-header {
+        font-weight: bold;
+        background-color: #555;
+        color: #FFF;
+
+        > * {
+            border: 1px solid #999;
+        }
+
+        .grid-prop {
+            
+        }
+    
+        .grid-val {
+    
+        }
+    }
+
+    .button-layout-properties-grid-value {
+        > * {
+            border: 1px solid #999;
+        }
+    }
+}

@@ -9,6 +9,7 @@ export default {
 	'github-label': 'GitHub',
 	'home-label': 'Home',
 	'led-config-label': 'LED Configuration',
+	'layout-config-label': 'Layout Configuration',
 	'links-label': 'Links',
 	'macro-label': 'Macros Configuration',
 	'pin-mapping-label': 'Pin Mapping',
