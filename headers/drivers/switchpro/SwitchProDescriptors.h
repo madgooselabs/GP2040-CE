@@ -98,8 +98,6 @@ typedef enum {
 
 typedef struct __attribute((packed, aligned(1)))
 {
-    uint8_t reportID;
-    uint8_t timestamp;
     uint8_t connection_info : 4;
     uint8_t battery_level : 4;
 
@@ -134,6 +132,13 @@ typedef struct __attribute((packed, aligned(1)))
     uint8_t button_zl : 1;
 
     uint8_t analog[6];
+} SwitchInputReport;
+
+typedef struct __attribute((packed, aligned(1)))
+{
+    uint8_t reportID;
+    uint8_t timestamp;
+    SwitchInputReport inputs;
     uint8_t vibrator_input_report;
     uint8_t imu_data[36];
     uint8_t padding[15];
