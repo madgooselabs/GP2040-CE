@@ -16,6 +16,7 @@ import WiiAddon from './Addons/WiiAddon';
 import Rotary from './Addons/Rotary';
 import PCF8575 from './Addons/PCF8575';
 import ReactiveLED from './Addons/ReactiveLED';
+import MPR121 from './Addons/MPR121';
 import InputMacroAddon from './InputMacroAddon';
 import LayoutConfig from './LayoutConfig';
 
@@ -40,4 +41,5 @@ export default {
 	LayoutConfig,
 	PCF8575,
 	ReactiveLED,
+	MPR121,
 };

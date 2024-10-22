@@ -762,6 +762,12 @@ message PCF8575Options
     repeated GpioMappingInfo pins = 3 [(nanopb).max_count = 16];
 }
 
+message MPR121Options
+{
+    optional bool enabled = 1;
+    optional MPR121InputMode inputMode = 2;
+}
+
 message DRV8833RumbleOptions
 {
 		optional bool enabled = 1;
@@ -817,6 +823,7 @@ message AddonOptions
     optional PCF8575Options pcf8575Options = 25;
     optional DRV8833RumbleOptions drv8833RumbleOptions = 26;
     optional ReactiveLEDOptions reactiveLEDOptions = 27;
+    optional MPR121Options mpr121Options = 28;
 }
 
 message MigrationHistory

@@ -423,3 +423,11 @@ enum PS4ControllerIDMode
     PS4_ID_CONSOLE = 0;
     PS4_ID_EMULATION = 1;
 };
+
+enum MPR121InputMode
+{
+    option (nanopb_enumopt).long_names = false;
+
+    MPR121_INPUT_GPIO = 0;
+    MPR121_INPUT_ANALOG = 1;
+};

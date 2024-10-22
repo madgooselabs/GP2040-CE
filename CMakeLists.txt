@@ -179,6 +179,7 @@ src/drivers/xinput/XInputAuth.cpp
 src/drivers/xinput/XInputAuthUSBListener.cpp
 src/drivers/xinput/XInputDriver.cpp
 src/interfaces/i2c/i2cdevicebase.cpp
+src/interfaces/i2c/mpr121/mpr121.cpp
 src/interfaces/i2c/pcf8575/pcf8575.cpp
 src/interfaces/i2c/ssd1306/obd_ssd1306.cpp
 src/interfaces/i2c/ssd1306/tiny_ssd1306.cpp
@@ -217,6 +218,7 @@ src/addons/keyboard_host.cpp
 src/addons/keyboard_host_listener.cpp
 src/addons/i2canalog1219.cpp
 src/addons/i2c_gpio_pcf8575.cpp
+src/addons/i2c_gpio_mpr121.cpp
 src/addons/display.cpp
 src/addons/neopicoleds.cpp
 src/addons/playernum.cpp
@@ -272,6 +274,7 @@ headers/drivers
 headers/interfaces
 headers/interfaces/i2c
 headers/interfaces/i2c/ads1219
+headers/interfaces/i2c/mpr121
 headers/interfaces/i2c/pcf8575
 headers/interfaces/i2c/ssd1306
 headers/interfaces/i2c/wiiextension

@@ -50,6 +50,7 @@ import InputHistory, {
 } from '../Addons/InputHistory';
 import Rotary, { rotaryScheme, rotaryState } from '../Addons/Rotary';
 import PCF8575, { pcf8575Scheme, pcf8575State } from '../Addons/PCF8575';
+import MPR121, { mpr121Scheme, mpr121State } from '../Addons/MPR121';
 import DRV8833Rumble, {
 	drv8833RumbleScheme,
 	drv8833RumbleState,
@@ -80,6 +81,7 @@ const schema = yup.object().shape({
 	...pcf8575Scheme,
 	...drv8833RumbleScheme,
 	...reactiveLEDScheme,
+	...mpr121Scheme,
 });
 
 const defaultValues = {
@@ -104,6 +106,7 @@ const defaultValues = {
 	...pcf8575State,
 	...drv8833RumbleState,
 	...reactiveLEDState,
+	...mpr121State,
 };
 
 const ADDONS = [
@@ -128,6 +131,7 @@ const ADDONS = [
 	PCF8575,
 	DRV8833Rumble,
 	ReactiveLED,
+	MPR121,
 ];
 
 const FormContext = ({ setStoredData }) => {

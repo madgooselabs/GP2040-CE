@@ -56,6 +56,22 @@ const INITIAL_STATE: State = {
 				pin15: { option: -10, direction: 0 },
 			},
 		],
+		mpr121: [
+			{
+				pin00: { option: -10, direction: 0 },
+				pin01: { option: -10, direction: 0 },
+				pin02: { option: -10, direction: 0 },
+				pin03: { option: -10, direction: 0 },
+				pin04: { option: -10, direction: 0 },
+				pin05: { option: -10, direction: 0 },
+				pin06: { option: -10, direction: 0 },
+				pin07: { option: -10, direction: 0 },
+				pin08: { option: -10, direction: 0 },
+				pin09: { option: -10, direction: 0 },
+				pin10: { option: -10, direction: 0 },
+				pin11: { option: -10, direction: 0 },
+			},
+		]
 	},
 	loadingPins: false,
 };
