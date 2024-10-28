@@ -30,6 +30,7 @@
 #include "addons/snes_input.h"
 #include "addons/rotaryencoder.h"
 #include "addons/i2c_gpio_pcf8575.h"
+#include "addons/motion.h"
 
 // Pico includes
 #include "pico/bootrom.h"
@@ -103,6 +104,7 @@ void GP2040::setup() {
 	addons.LoadAddon(new TiltInput(), CORE0_INPUT);
 	addons.LoadAddon(new RotaryEncoderInput(), CORE0_INPUT);
 	addons.LoadAddon(new PCF8575Addon(), CORE0_INPUT);
+	addons.LoadAddon(new MotionAddon(), CORE0_INPUT);
 
 	// Input override addons
 	addons.LoadAddon(new ReverseInput(), CORE0_INPUT);
