@@ -1,7 +1,6 @@
 #include "mpu6886.h"
 
 #include <cstring>
-#include <cstdio>
 
 void MPU6886::begin() {
     reset();

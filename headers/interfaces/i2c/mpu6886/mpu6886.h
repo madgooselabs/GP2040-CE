@@ -66,7 +66,6 @@ class MPU6886 : public I2CDeviceBase {
         //// Methods
         void begin();
         void reset();
-        //void start();
 
         void setI2C(PeripheralI2C *i2cController) { this->i2c = i2cController; }
         void setAddress(uint8_t addr) { this->address = addr; }

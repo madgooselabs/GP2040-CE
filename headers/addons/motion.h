@@ -27,8 +27,9 @@ public:
 	virtual void process();
     virtual std::string name() { return MotionAddonName; }
 private:
-    BNO086* bno;
-    MPU6886* mpu;
+    BNO086* bno = nullptr;
+    MPU6886* mpu = nullptr;
+    LSM6DSO* lsm = nullptr;
 };
 
 #endif  // _I2CAnalog_H_
