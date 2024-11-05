@@ -1,7 +1,6 @@
 #ifndef MOTIONADDON_H
 #define MOTIONADDON_H
 
-#include "bno086.h"
 #include "lsm6dso.h"
 #include "mpu6886.h"
 
@@ -27,7 +26,6 @@ public:
 	virtual void process();
     virtual std::string name() { return MotionAddonName; }
 private:
-    BNO086* bno = nullptr;
     MPU6886* mpu = nullptr;
     LSM6DSO* lsm = nullptr;
 };

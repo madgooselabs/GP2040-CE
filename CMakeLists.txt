@@ -179,7 +179,6 @@ src/drivers/xinput/XInputAuth.cpp
 src/drivers/xinput/XInputAuthUSBListener.cpp
 src/drivers/xinput/XInputDriver.cpp
 src/interfaces/i2c/i2cdevicebase.cpp
-src/interfaces/i2c/bno086/bno086.cpp
 src/interfaces/i2c/lsm6dso/lsm6dso.cpp
 src/interfaces/i2c/mpu6886/mpu6886.cpp
 src/interfaces/i2c/pcf8575/pcf8575.cpp
@@ -276,7 +275,6 @@ headers/drivers
 headers/interfaces
 headers/interfaces/i2c
 headers/interfaces/i2c/ads1219
-headers/interfaces/i2c/bno086
 headers/interfaces/i2c/lsm6dso
 headers/interfaces/i2c/mpu6886
 headers/interfaces/i2c/pcf8575

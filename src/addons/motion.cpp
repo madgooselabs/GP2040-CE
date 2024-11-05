@@ -11,11 +11,9 @@ bool MotionAddon::available() {
     const MotionOptions& options = Storage::getInstance().getAddonOptions().motionOptions;
     //if (options.enabled) {
         mpu = new MPU6886();
-        bno = new BNO086();
         lsm = new LSM6DSO();
 
         PeripheralI2CScanResult resultMPU = PeripheralManager::getInstance().scanForI2CDevice(mpu->getDeviceAddresses());
-        PeripheralI2CScanResult resultBNO = PeripheralManager::getInstance().scanForI2CDevice(bno->getDeviceAddresses());
         PeripheralI2CScanResult resultLSM = PeripheralManager::getInstance().scanForI2CDevice(lsm->getDeviceAddresses());
 
         if (resultMPU.address > -1) {
@@ -25,15 +23,6 @@ bool MotionAddon::available() {
         } else {
             delete mpu;
             mpu = nullptr;
-        }
-
-        if (resultBNO.address > -1) {
-            bno->setAddress(resultBNO.address);
-            bno->setI2C(PeripheralManager::getInstance().getI2C(resultBNO.block));
-            result = true;
-        } else {
-            delete bno;
-            bno = nullptr;
         }
 
         if (resultLSM.address > -1) {
@@ -52,7 +41,6 @@ void MotionAddon::setup() {
     const MotionOptions& options = Storage::getInstance().getAddonOptions().motionOptions;
 
     if (mpu != nullptr) mpu->begin();
-    if (bno != nullptr) bno->begin();
     if (lsm != nullptr) lsm->begin();
 }
 
@@ -73,17 +61,9 @@ void MotionAddon::process()
         printf("[MPU6886] %f,%f,%f,%f,%f,%f\n", ax, ay, az, gx, gy, gz);
     }
 
-    if (bno != nullptr) {
-        //bno->accelerometer(&ax, &ay, &az);
-        //bno->gyroscope(&gx, &gy, &gz);
-        //printf("[BNO086] %f,%f,%f,%f,%f,%f\n", ax, ay, az, gx, gy, gz);
-    }
-
     if (lsm != nullptr) {
         lsm->accelerometer(&ax, &ay, &az);
         lsm->gyroscope(&gx, &gy, &gz);
         printf("[LSM6DSO] %f,%f,%f,%f,%f,%f\n", ax, ay, az, gx, gy, gz);
     }
-
-    //sleep_us(100);
 }
