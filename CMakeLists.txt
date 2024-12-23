@@ -182,6 +182,7 @@ src/interfaces/i2c/i2cdevicebase.cpp
 src/interfaces/i2c/pcf8575/pcf8575.cpp
 src/interfaces/i2c/ssd1306/obd_ssd1306.cpp
 src/interfaces/i2c/ssd1306/tiny_ssd1306.cpp
+src/interfaces/i2c/seesaw/seesaw_dev.cpp
 src/display/ui/elements/GPWidget.cpp
 src/display/ui/elements/GPButton.cpp
 src/display/ui/elements/GPLever.cpp
@@ -229,6 +230,7 @@ src/addons/turbo.cpp
 src/addons/slider_socd.cpp
 src/addons/wiiext.cpp
 src/addons/input_macro.cpp
+src/addons/seesaw.cpp
 src/addons/snes_input.cpp
 src/addons/tilt.cpp
 src/addons/spi_analog_ads1256.cpp
@@ -276,6 +278,7 @@ headers/interfaces/i2c
 headers/interfaces/i2c/ads1219
 headers/interfaces/i2c/pcf8575
 headers/interfaces/i2c/ssd1306
+headers/interfaces/i2c/seesaw
 headers/interfaces/i2c/wiiextension
 headers/gamepad
 headers/display
