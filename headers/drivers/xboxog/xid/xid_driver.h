@@ -74,7 +74,7 @@ static uint8_t const XID_DESC_CONFIGURATION[] =
     TUD_XID_XREMOTE_DESCRIPTOR(ITF_NUM_XID_XREMOTE, 0x80 | (ITF_NUM_XID_XREMOTE + 1)),
 #endif
 
-#if (CFG_TUD_MSC >= 1)
+#if (CFG_TUD_MSC >= 1) && (MSC_XMU >= 1)
     TUD_MSC_DESCRIPTOR(ITF_NUM_MSC, 0, ITF_NUM_MSC + 1, 0x80 | (ITF_NUM_MSC + 1), 64),
 #endif
 

@@ -169,6 +169,9 @@ void GP2040::setup() {
 		case BootAction::SET_INPUT_MODE_XBOXORIGINAL: // Xbox OG Driver
 			inputMode = INPUT_MODE_XBOXORIGINAL;
 			break;
+		case BootAction::SET_INPUT_MODE_USB_STORAGE: // USB Storage
+			inputMode = INPUT_MODE_USB_STORAGE;
+			break;
 		case BootAction::NONE:
 		default:
 			break;

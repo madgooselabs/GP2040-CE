@@ -1,5 +1,6 @@
 #include "drivermanager.h"
 
+#include "drivers/usbstorage/USBStorageDriver.h"
 #include "drivers/net/NetDriver.h"
 #include "drivers/astro/AstroDriver.h"
 #include "drivers/egret/EgretDriver.h"
@@ -67,6 +68,9 @@ void DriverManager::setup(InputMode mode) {
             break;
         case INPUT_MODE_XINPUT:
             driver = new XInputDriver();
+            break;
+        case INPUT_MODE_USB_STORAGE:
+            driver = new USBStorageDriver();
             break;
         default:
             return;
