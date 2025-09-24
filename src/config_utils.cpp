@@ -82,6 +82,9 @@
 #ifndef DEFAULT_INPUT_MODE
     #define DEFAULT_INPUT_MODE INPUT_MODE_XINPUT
 #endif
+#ifndef DEFAULT_INPUT_DEVICE_TYPE
+    #define DEFAULT_INPUT_DEVICE_TYPE INPUT_MODE_DEVICE_TYPE_GAMEPAD
+#endif
 #ifndef DEFAULT_INPUT_MODE_B1
     #define DEFAULT_INPUT_MODE_B1 INPUT_MODE_SWITCH
 #endif
@@ -291,6 +294,7 @@ void ConfigUtils::initUnsetPropertiesWithDefaults(Config& config)
 
     // gamepadOptions
     INIT_UNSET_PROPERTY(config.gamepadOptions, inputMode, DEFAULT_INPUT_MODE);
+    INIT_UNSET_PROPERTY(config.gamepadOptions, inputDeviceType, DEFAULT_INPUT_DEVICE_TYPE);
     INIT_UNSET_PROPERTY(config.gamepadOptions, dpadMode, DEFAULT_DPAD_MODE);
     INIT_UNSET_PROPERTY(config.gamepadOptions, socdMode, DEFAULT_SOCD_MODE);
     INIT_UNSET_PROPERTY(config.gamepadOptions, invertXAxis, false);
