@@ -13,6 +13,7 @@ import AnalogPinOptions from '../Components/AnalogPinOptions';
 import { BUTTON_MASKS_OPTIONS } from '../Data/Buttons';
 import { DUAL_STICK_MODES } from '../Data/Addons';
 import LEDColors from '../Data/LEDColors';
+import { ANALOG_PINS } from '../Data/Buttons';
 import { AddonPropTypes } from '../Pages/AddonsConfigPage';
 
 import useBoardDefinition from '../Store/useBoardDefinitionStore';
@@ -158,8 +159,6 @@ const Turbo = ({
 
 	const { usedPins } = useContext(AppContext);
 	const { boardDefinition } = useBoardDefinition();
-
-	const ANALOG_PINS = boardDefinition.analogPins;
 
 	const availableAnalogPins = ANALOG_PINS.filter(
 			(pin) => !usedPins?.includes(pin),
